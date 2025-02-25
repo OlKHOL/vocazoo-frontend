@@ -55,7 +55,7 @@ const EditWordDialog = ({ open, onClose, wordSet, onSave }) => {
     try {
       const token = localStorage.getItem("token");
       await axios.put(
-        `http://localhost:5000/admin/edit_word_set/${wordSet.id}`,
+        `http://vocazoo.co.kr/admin/edit_word_set/${wordSet.id}`,
         { words },
         { headers: { Authorization: token } }
       );
@@ -237,7 +237,7 @@ const WordSetViewer = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `http://localhost:5000/word_set/${wordSetId}`,
+        `http://vocazoo.co.kr/word_set/${wordSetId}`,
         {
           headers: { Authorization: token },
         }
@@ -254,7 +254,7 @@ const WordSetViewer = () => {
       try {
         const token = localStorage.getItem("token");
         await axios.delete(
-          `http://localhost:5000/admin/delete_word_set/${wordSetId}`,
+          `http://vocazoo.co.kr/admin/delete_word_set/${wordSetId}`,
           {
             headers: { Authorization: token },
           }
@@ -270,7 +270,7 @@ const WordSetViewer = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `http://localhost:5000/word_set/${wordSet.id}`,
+        `http://vocazoo.co.kr/word_set/${wordSet.id}`,
         {
           headers: { Authorization: token },
         }
@@ -305,7 +305,7 @@ const WordSetViewer = () => {
   const handleExport = async () => {
     try {
       const token = localStorage.getItem("token");
-      await axios.get("http://localhost:5000/admin/export_word_sets", {
+      await axios.get("http://vocazoo.co.kr/admin/export_word_sets", {
         headers: { Authorization: token },
       });
       alert("단어장이 word_sets.py 파일로 저장되었습니다.");

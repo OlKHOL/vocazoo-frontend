@@ -304,7 +304,7 @@ const Quiz = () => {
         const token = localStorage.getItem("token");
         const word_set_id = localStorage.getItem("current_word_set_id");
 
-        const response = await fetch("http://localhost:5000/start_test", {
+        const response = await fetch("http://vocazoo.co.kr/start_test", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

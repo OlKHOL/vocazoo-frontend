@@ -40,7 +40,7 @@ function AccountModal({ open, onClose }) {
     try {
       const token = localStorage.getItem("token");
       await axios.put(
-        "http://localhost:5000/account",
+        "http://vocazoo.co.kr/account",
         { username: newUsername },
         {
           headers: {
