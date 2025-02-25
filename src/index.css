@@ -1,0 +1,61 @@
+/* Google Fonts에서 Roboto와 Lora를 가져옵니다. */
+@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Lora:wght@400;700&display=swap");
+
+/* 기본적인 스타일 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Noto Sans KR", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans",
+    "Helvetica Neue", sans-serif;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #1e2a3a;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  text-align: center;
+  padding: 20px;
+}
+
+/* 제목 부분 */
+h1,
+h2,
+h3 {
+  font-family: "Lora", serif; /* Lora는 세련되고 클래식한 느낌 */
+  font-weight: 700;
+  color: #444;
+}
+
+/* 본문 텍스트 */
+p {
+  font-size: 1.2em; /* 본문 텍스트 크기를 키웁니다 */
+  line-height: 1.6;
+}
+
+/* 버튼 스타일 (선택 사항) */
+button {
+  font-family: "Roboto", sans-serif;
+  padding: 10px 20px;
+  font-size: 1.1em;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
+    monospace;
+}

@@ -1,0 +1,82 @@
+import React from "react";
+import { Box, IconButton } from "@mui/material";
+import { useNavigate, useLocation } from "react-router-dom";
+import HomeIcon from "@mui/icons-material/Home";
+import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import { useButtonFeedback } from "../hooks/useButtonFeedback";
+
+const Navigationbar = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const playFeedback = useButtonFeedback();
+
+  const isActive = (path) => location.pathname === path;
+
+  const handleNavigation = (path) => {
+    playFeedback();
+    navigate(path);
+  };
+
+  return (
+    <Box
+      sx={{
+        position: "fixed",
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: "60px",
+        backgroundColor: "#17202C",
+        display: "flex",
+        justifyContent: "space-around",
+        alignItems: "center",
+        borderTop: "1px solid rgba(255, 255, 255, 0.1)",
+        zIndex: 1000,
+      }}
+    >
+      <IconButton
+        onClick={() => handleNavigation("/")}
+        sx={{
+          color: isActive("/") ? "#9b87f5" : "#FFFFFF",
+          transition: "all 0.2s ease",
+          "&:hover": {
+            color: "#9b87f5",
+            transform: "translateY(-2px)",
+          },
+        }}
+      >
+        <HomeIcon sx={{ fontSize: "28px" }} />
+      </IconButton>
+
+      <IconButton
+        onClick={() => handleNavigation("/rankings")}
+        sx={{
+          color: isActive("/rankings") ? "#9b87f5" : "#FFFFFF",
+          transition: "all 0.2s ease",
+          "&:hover": {
+            color: "#9b87f5",
+            transform: "translateY(-2px)",
+          },
+        }}
+      >
+        <EmojiEventsIcon sx={{ fontSize: "28px" }} />
+      </IconButton>
+
+      <IconButton
+        onClick={() => handleNavigation("/account")}
+        sx={{
+          color: isActive("/account") ? "#9b87f5" : "#FFFFFF",
+          transition: "all 0.2s ease",
+          "&:hover": {
+            color: "#9b87f5",
+            transform: "translateY(-2px)",
+          },
+        }}
+      >
+        <AccountCircleIcon sx={{ fontSize: "28px" }} />
+      </IconButton>
+    </Box>
+  );
+};
+
+export default Navigationbar;
