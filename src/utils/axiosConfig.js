@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const instance = axios.create({
-  baseURL: "http://vocazoo.co.kr",
+  baseURL: "https://vocazoo.co.kr",
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
