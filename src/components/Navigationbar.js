@@ -1,15 +1,35 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Box, IconButton } from "@mui/material";
 import { useNavigate, useLocation } from "react-router-dom";
 import HomeIcon from "@mui/icons-material/Home";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import SettingsIcon from "@mui/icons-material/Settings";
 import { useButtonFeedback } from "../hooks/useButtonFeedback";
+import api from "../utils/axiosConfig";
 
 const Navigationbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const playFeedback = useButtonFeedback();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    // 관리자 권한 확인
+    const checkAdmin = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (token) {
+          const response = await api.get("/check_admin");
+          setIsAdmin(response.data.is_admin);
+        }
+      } catch (error) {
+        console.error("관리자 권한 확인 오류:", error);
+      }
+    };
+
+    checkAdmin();
+  }, []);
 
   const isActive = (path) => location.pathname === path;
 
@@ -75,6 +95,22 @@ const Navigationbar = () => {
       >
         <AccountCircleIcon sx={{ fontSize: "28px" }} />
       </IconButton>
+
+      {isAdmin && (
+        <IconButton
+          onClick={() => handleNavigation("/admin")}
+          sx={{
+            color: isActive("/admin") ? "#9b87f5" : "#FFFFFF",
+            transition: "all 0.2s ease",
+            "&:hover": {
+              color: "#9b87f5",
+              transform: "translateY(-2px)",
+            },
+          }}
+        >
+          <SettingsIcon sx={{ fontSize: "28px" }} />
+        </IconButton>
+      )}
     </Box>
   );
 };

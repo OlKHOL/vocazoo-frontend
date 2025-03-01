@@ -18,6 +18,7 @@ import AccountPage from "./pages/AccountPage";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import RankingPage from "./pages/RankingPage";
 import LevelPage from "./pages/LevelPage";
+import AdminPage from "./pages/AdminPage";
 
 const theme = createTheme({
   typography: {
@@ -98,6 +99,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <LevelPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute>
+                <AdminPage />
               </ProtectedRoute>
             }
           />
