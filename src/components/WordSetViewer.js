@@ -54,15 +54,15 @@ const EditWordDialog = ({ open, onClose, wordSet, onSave }) => {
   const handleSave = async () => {
     try {
       const token = localStorage.getItem("token");
-      await axios.put(
-        `http://vocazoo.co.kr/admin/edit_word_set/${wordSet.id}`,
+      await api.put(
+        `/admin/edit_word_set/${wordSet.id}`,
         { words },
         { headers: { Authorization: token } }
       );
-      await onSave(words);
+      onSave(words);
       onClose();
-    } catch (err) {
-      setError("단어장 수정에 실패했습니다.");
+    } catch (error) {
+      console.error("Error saving words:", error);
     }
   };
 
@@ -236,16 +236,13 @@ const WordSetViewer = () => {
   const handleViewWords = async (wordSetId) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get(
-        `http://vocazoo.co.kr/word_set/${wordSetId}`,
-        {
-          headers: { Authorization: token },
-        }
-      );
+      const response = await api.get(`/word_set/${wordSetId}`, {
+        headers: { Authorization: token },
+      });
       setSelectedSet(response.data);
       setWordDialogOpen(true);
-    } catch (err) {
-      setError("단어장을 불러오는데 실패했습니다.");
+    } catch (error) {
+      console.error("Error fetching words:", error);
     }
   };
 
@@ -253,15 +250,12 @@ const WordSetViewer = () => {
     if (window.confirm("정말로 이 단어장을 삭제하시겠습니까?")) {
       try {
         const token = localStorage.getItem("token");
-        await axios.delete(
-          `http://vocazoo.co.kr/admin/delete_word_set/${wordSetId}`,
-          {
-            headers: { Authorization: token },
-          }
-        );
-        setWordSets(wordSets.filter((ws) => ws.id !== wordSetId));
+        await api.delete(`/admin/delete_word_set/${wordSetId}`, {
+          headers: { Authorization: token },
+        });
+        fetchWordSets();
       } catch (error) {
-        setError("단어장 삭제에 실패했습니다.");
+        console.error("Error deleting word set:", error);
       }
     }
   };
@@ -269,12 +263,9 @@ const WordSetViewer = () => {
   const handleEdit = async (wordSet) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get(
-        `http://vocazoo.co.kr/word_set/${wordSet.id}`,
-        {
-          headers: { Authorization: token },
-        }
-      );
+      const response = await api.get(`/word_set/${wordSet.id}`, {
+        headers: { Authorization: token },
+      });
       setSelectedSetForEdit(response.data);
       setEditDialogOpen(true);
     } catch (err) {
@@ -305,12 +296,11 @@ const WordSetViewer = () => {
   const handleExport = async () => {
     try {
       const token = localStorage.getItem("token");
-      await axios.get("http://vocazoo.co.kr/admin/export_word_sets", {
+      await api.get("/admin/export_word_sets", {
         headers: { Authorization: token },
       });
-      alert("단어장이 word_sets.py 파일로 저장되었습니다.");
-    } catch (err) {
-      setError("단어장 내보내기에 실패했습니다.");
+    } catch (error) {
+      console.error("Error exporting word sets:", error);
     }
   };
 

@@ -17,6 +17,7 @@ function AccountModal({ open, onClose }) {
   const [error, setError] = useState("");
   const [score, setScore] = useState(0); // 점수 상태 추가
   const [registerDate, setRegisterDate] = useState(""); // 등록 날짜 상태 추가
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
     const fetchUserInfo = async () => {
@@ -39,8 +40,8 @@ function AccountModal({ open, onClose }) {
     e.preventDefault();
     try {
       const token = localStorage.getItem("token");
-      await axios.put(
-        "http://vocazoo.co.kr/account",
+      await api.put(
+        "/account",
         { username: newUsername },
         {
           headers: {
@@ -48,13 +49,10 @@ function AccountModal({ open, onClose }) {
           },
         }
       );
-      setUsername(newUsername);
-      setNewUsername("");
+      setMessage("사용자 이름이 성공적으로 변경되었습니다.");
       onClose();
     } catch (error) {
-      setError(
-        error.response?.data?.message || "사용자명 변경에 실패했습니다."
-      );
+      setError("사용자 이름 변경에 실패했습니다.");
     }
   };
 

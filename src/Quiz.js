@@ -304,14 +304,18 @@ const Quiz = () => {
         const token = localStorage.getItem("token");
         const word_set_id = localStorage.getItem("current_word_set_id");
 
-        const response = await fetch("http://vocazoo.co.kr/start_test", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: token,
+        const response = await api.post(
+          "/start_test",
+          {
+            word_set_id: word_set_id,
           },
-          body: JSON.stringify({ word_set_id: parseInt(word_set_id) }),
-        });
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: token,
+            },
+          }
+        );
 
         if (!response.ok) {
           console.error("테스트 시작 중 오류가 발생했습니다");

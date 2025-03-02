@@ -1,10 +1,7 @@
 import axios from "axios";
 
-// 현재 환경에 따른 baseURL 설정
-const baseURL =
-  process.env.NODE_ENV === "production"
-    ? "https://vocazoo.co.kr"
-    : "http://localhost:5000";
+// 환경 변수에서 baseURL 설정
+const baseURL = process.env.REACT_APP_API_URL || "https://vocazoo.co.kr";
 
 console.log("API baseURL:", baseURL);
 console.log("Current environment:", process.env.NODE_ENV);
