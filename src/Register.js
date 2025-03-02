@@ -6,6 +6,7 @@ const Register = ({ onRegisterSuccess }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
 
   const validateUsername = (username) => {
     if (username.length < 2) return "이름은 2자 이상이어야 합니다";
@@ -26,18 +27,18 @@ const Register = ({ onRegisterSuccess }) => {
 
     const usernameError = validateUsername(username);
     if (usernameError) {
-      alert(usernameError);
+      setError(usernameError);
       return;
     }
 
     const passwordError = validatePassword(password);
     if (passwordError) {
-      alert(passwordError);
+      setError(passwordError);
       return;
     }
 
     if (password !== confirmPassword) {
-      alert("비밀번호가 일치하지 않습니다");
+      setError("비밀번호가 일치하지 않습니다");
       return;
     }
 
@@ -47,15 +48,17 @@ const Register = ({ onRegisterSuccess }) => {
         password,
       });
 
-      if (response.ok) {
+      if (response.status === 200 || response.status === 201) {
         alert("회원가입 성공!");
         onRegisterSuccess(); // 회원가입 성공 시 콜백
       } else {
-        alert("회원가입 실패");
+        setError("회원가입 실패");
       }
     } catch (error) {
       console.error("Register error:", error);
-      alert("회원가입 중 오류가 발생했습니다");
+      setError(
+        error.response?.data?.message || "회원가입 중 오류가 발생했습니다"
+      );
     }
   };
 
@@ -80,6 +83,20 @@ const Register = ({ onRegisterSuccess }) => {
       >
         회원가입
       </h2>
+      {error && (
+        <div
+          style={{
+            color: "red",
+            textAlign: "center",
+            marginBottom: "15px",
+            padding: "10px",
+            backgroundColor: "#ffebee",
+            borderRadius: "4px",
+          }}
+        >
+          {error}
+        </div>
+      )}
       <form
         onSubmit={handleSubmit}
         style={{
