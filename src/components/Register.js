@@ -54,7 +54,7 @@ const Register = () => {
 
     try {
       console.log("회원가입 시도:", { username, password });
-      const response = await api.post("/register", { username, password });
+      const response = await api.post("/auth/register", { username, password });
       console.log("회원가입 응답:", response);
 
       // 성공 메시지 표시 후 로그인 페이지로 이동
