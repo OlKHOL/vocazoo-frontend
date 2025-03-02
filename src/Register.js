@@ -50,7 +50,12 @@ const Register = ({ onRegisterSuccess }) => {
 
       if (response.status === 200 || response.status === 201) {
         alert("회원가입 성공!");
-        onRegisterSuccess(); // 회원가입 성공 시 콜백
+        if (onRegisterSuccess) {
+          onRegisterSuccess(); // 회원가입 성공 시 콜백
+        } else {
+          // 콜백이 없으면 로그인 페이지로 이동
+          window.location.href = "/login";
+        }
       } else {
         setError("회원가입 실패");
       }

@@ -18,17 +18,49 @@ const Register = () => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
+  const validateUsername = (username) => {
+    if (username.length < 2) return "이름은 2자 이상이어야 합니다";
+    // 한글, 영문, 숫자만 허용하는 정규식
+    if (!/^[가-힣a-zA-Z0-9]+$/.test(username)) {
+      return "이름은 한글, 영문, 숫자만 사용할 수 있습니다";
+    }
+    return null;
+  };
+
+  const validatePassword = (password) => {
+    if (password.length < 4) return "비밀번호는 4자 이상이어야 합니다";
+    return null;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const usernameError = validateUsername(username);
+    if (usernameError) {
+      setError(usernameError);
+      return;
+    }
+
+    const passwordError = validatePassword(password);
+    if (passwordError) {
+      setError(passwordError);
+      return;
+    }
+
     if (password !== confirmPassword) {
       setError("비밀번호가 일치하지 않습니다.");
       return;
     }
 
     try {
-      await api.post("/auth/register", { username, password });
-      navigate("/login");
+      console.log("회원가입 시도:", { username, password });
+      const response = await api.post("/auth/register", { username, password });
+      console.log("회원가입 응답:", response);
+      navigate("/login", {
+        state: { message: "회원가입이 완료되었습니다. 로그인해주세요." },
+      });
     } catch (error) {
+      console.error("Register error:", error);
       setError(
         error.response?.data?.message || "회원가입 중 오류가 발생했습니다."
       );
