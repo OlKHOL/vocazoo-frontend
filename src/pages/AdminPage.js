@@ -11,10 +11,12 @@ import {
   Modal,
   Alert,
   Spinner,
+  Nav,
 } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import api from "../utils/axiosConfig";
 import "../styles/AdminPage.css";
+import Navigationbar from "../components/Navigationbar";
 
 const AdminPage = () => {
   const navigate = useNavigate();
@@ -36,6 +38,7 @@ const AdminPage = () => {
   const [file, setFile] = useState(null);
   const [uploadResult, setUploadResult] = useState(null);
   const [error, setError] = useState("");
+  const [activeTab, setActiveTab] = useState("words");
 
   // 관리자 권한 확인
   useEffect(() => {
@@ -208,242 +211,281 @@ const AdminPage = () => {
   }
 
   return (
-    <Container className="admin-page py-4">
-      <h1 className="mb-4">관리자 페이지</h1>
+    <div className="admin-page-wrapper">
+      <Container className="admin-page py-4 mb-5">
+        <h1 className="mb-4 text-center">관리자 페이지</h1>
 
-      {error && <Alert variant="danger">{error}</Alert>}
+        {error && <Alert variant="danger">{error}</Alert>}
 
-      <Card className="mb-4">
-        <Card.Header as="h5">단어 관리</Card.Header>
-        <Card.Body>
-          <Row className="mb-3">
-            <Col md={6}>
-              <Form onSubmit={handleSearch}>
-                <Row>
-                  <Col md={5}>
-                    <Form.Control
-                      type="text"
-                      placeholder="검색어 입력..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                  </Col>
-                  <Col md={3}>
-                    <Form.Select
-                      value={selectedLevel}
-                      onChange={(e) => setSelectedLevel(e.target.value)}
-                    >
-                      <option value="">모든 레벨</option>
-                      <option value="1">레벨 1</option>
-                      <option value="2">레벨 2</option>
-                      <option value="3">레벨 3</option>
-                      <option value="4">레벨 4</option>
-                      <option value="5">레벨 5</option>
-                    </Form.Select>
-                  </Col>
-                  <Col md={4}>
-                    <Button type="submit" variant="primary">
-                      검색
-                    </Button>
-                  </Col>
-                </Row>
-              </Form>
-            </Col>
-            <Col md={6} className="text-end">
-              <Button
-                variant="success"
-                className="me-2"
-                onClick={() => setShowUploadModal(true)}
-              >
-                CSV 업로드
+        <Nav
+          variant="tabs"
+          className="mb-4"
+          activeKey={activeTab}
+          onSelect={(k) => setActiveTab(k)}
+        >
+          <Nav.Item>
+            <Nav.Link eventKey="words">단어 관리</Nav.Link>
+          </Nav.Item>
+          <Nav.Item>
+            <Nav.Link eventKey="wordsets">단어장 관리</Nav.Link>
+          </Nav.Item>
+          <Nav.Item>
+            <Nav.Link eventKey="tools">관리 도구</Nav.Link>
+          </Nav.Item>
+        </Nav>
+
+        {activeTab === "words" && (
+          <Card className="mb-4">
+            <Card.Header as="h5">단어 관리</Card.Header>
+            <Card.Body>
+              <Row className="mb-3">
+                <Col md={6}>
+                  <Form onSubmit={handleSearch}>
+                    <Row>
+                      <Col md={5}>
+                        <Form.Control
+                          type="text"
+                          placeholder="검색어 입력..."
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                      </Col>
+                      <Col md={3}>
+                        <Form.Select
+                          value={selectedLevel}
+                          onChange={(e) => setSelectedLevel(e.target.value)}
+                        >
+                          <option value="">모든 레벨</option>
+                          <option value="1">레벨 1</option>
+                          <option value="2">레벨 2</option>
+                          <option value="3">레벨 3</option>
+                          <option value="4">레벨 4</option>
+                          <option value="5">레벨 5</option>
+                        </Form.Select>
+                      </Col>
+                      <Col md={4}>
+                        <Button type="submit" variant="primary">
+                          검색
+                        </Button>
+                      </Col>
+                    </Row>
+                  </Form>
+                </Col>
+                <Col md={6} className="text-end">
+                  <Button
+                    variant="success"
+                    onClick={() => setShowUploadModal(true)}
+                    className="me-2"
+                  >
+                    CSV 업로드
+                  </Button>
+                </Col>
+              </Row>
+
+              {isLoading ? (
+                <div className="text-center py-4">
+                  <Spinner animation="border" />
+                </div>
+              ) : (
+                <>
+                  <div className="table-responsive">
+                    <Table striped bordered hover>
+                      <thead>
+                        <tr>
+                          <th>ID</th>
+                          <th>영어</th>
+                          <th>한국어</th>
+                          <th>레벨</th>
+                          <th>사용됨</th>
+                          <th>마지막 수정</th>
+                          <th>작업</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {words.map((word) => (
+                          <tr key={word.id}>
+                            <td>{word.id}</td>
+                            <td>{word.english}</td>
+                            <td>{word.korean}</td>
+                            <td>{word.level}</td>
+                            <td>{word.used ? "예" : "아니오"}</td>
+                            <td>
+                              {word.last_modified
+                                ? new Date(
+                                    word.last_modified
+                                  ).toLocaleDateString()
+                                : "-"}
+                            </td>
+                            <td>
+                              <Button
+                                variant="outline-primary"
+                                size="sm"
+                                onClick={() => handleEditModalOpen(word)}
+                                className="me-1"
+                              >
+                                수정
+                              </Button>
+                              <Button
+                                variant="outline-danger"
+                                size="sm"
+                                onClick={() => handleDeleteWord(word.id)}
+                              >
+                                삭제
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </Table>
+                  </div>
+                  {renderPagination()}
+                </>
+              )}
+            </Card.Body>
+          </Card>
+        )}
+
+        {activeTab === "wordsets" && (
+          <Card className="mb-4">
+            <Card.Header as="h5">단어장 관리</Card.Header>
+            <Card.Body>
+              <Row className="mb-3">
+                <Col>
+                  <Button variant="primary" onClick={handleCreateWordSet}>
+                    새 단어장 생성
+                  </Button>
+                </Col>
+              </Row>
+              <p>
+                새 단어장을 생성하면 사용되지 않은 단어들 중에서 무작위로 30개를
+                선택하여 단어장을 만듭니다. 생성된 단어장은 기본적으로 비활성화
+                상태입니다.
+              </p>
+            </Card.Body>
+          </Card>
+        )}
+
+        {activeTab === "tools" && (
+          <Card className="mb-4">
+            <Card.Header as="h5">관리 도구</Card.Header>
+            <Card.Body>
+              <Row className="mb-3">
+                <Col>
+                  <h6>관리자 권한 관리</h6>
+                  <p>
+                    관리자 권한을 부여하거나 박탈하려면 다음 명령어를
+                    사용하세요:
+                  </p>
+                  <div className="bg-light p-3 rounded">
+                    <code>
+                      python backend/create_admin.py --username 사용자명
+                    </code>
+                    <br />
+                    <code>
+                      python backend/revoke_admin.py --username 사용자명
+                    </code>
+                  </div>
+                </Col>
+              </Row>
+            </Card.Body>
+          </Card>
+        )}
+
+        {/* 파일 업로드 모달 */}
+        <Modal show={showUploadModal} onHide={() => setShowUploadModal(false)}>
+          <Modal.Header closeButton>
+            <Modal.Title>CSV 파일 업로드</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <Form onSubmit={handleFileUpload}>
+              <Form.Group controlId="formFile" className="mb-3">
+                <Form.Label>CSV 파일 선택</Form.Label>
+                <Form.Control
+                  type="file"
+                  accept=".csv"
+                  onChange={(e) => setFile(e.target.files[0])}
+                />
+                <Form.Text className="text-muted">
+                  CSV 파일은 english, korean, level 열을 포함해야 합니다.
+                </Form.Text>
+              </Form.Group>
+              <Button variant="primary" type="submit">
+                업로드
               </Button>
-              <Button variant="primary" onClick={handleCreateWordSet}>
-                단어장 생성
-              </Button>
-            </Col>
-          </Row>
-
-          {isLoading ? (
-            <div className="text-center py-4">
-              <Spinner animation="border" />
-            </div>
-          ) : (
-            <>
-              <Table striped bordered hover responsive>
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>영어</th>
-                    <th>한국어</th>
-                    <th>레벨</th>
-                    <th>사용됨</th>
-                    <th>마지막 수정</th>
-                    <th>작업</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {words.length > 0 ? (
-                    words.map((word) => (
-                      <tr key={word.id}>
-                        <td>{word.id}</td>
-                        <td>{word.english}</td>
-                        <td>{word.korean}</td>
-                        <td>{word.level}</td>
-                        <td>{word.used ? "예" : "아니오"}</td>
-                        <td>
-                          {word.last_modified
-                            ? new Date(word.last_modified).toLocaleString()
-                            : "-"}
-                        </td>
-                        <td>
-                          <Button
-                            variant="outline-primary"
-                            size="sm"
-                            className="me-1"
-                            onClick={() => handleEditModalOpen(word)}
-                          >
-                            수정
-                          </Button>
-                          <Button
-                            variant="outline-danger"
-                            size="sm"
-                            onClick={() => handleDeleteWord(word.id)}
-                          >
-                            삭제
-                          </Button>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="7" className="text-center">
-                        단어가 없습니다.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </Table>
-
-              {renderPagination()}
-            </>
-          )}
-        </Card.Body>
-      </Card>
-
-      {/* 파일 업로드 모달 */}
-      <Modal show={showUploadModal} onHide={() => setShowUploadModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>CSV 파일 업로드</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <p>
-            CSV 파일 형식: <code>english,korean,level</code>
-          </p>
-          <p>첫 번째 행은 헤더로 간주됩니다.</p>
-
-          <Form onSubmit={handleFileUpload}>
-            <Form.Group className="mb-3">
-              <Form.Label>CSV 파일 선택</Form.Label>
-              <Form.Control
-                type="file"
-                accept=".csv"
-                onChange={(e) => setFile(e.target.files[0])}
-              />
-            </Form.Group>
+            </Form>
 
             {uploadResult && (
-              <Alert variant="success">
-                <p>업로드 완료!</p>
+              <Alert variant="success" className="mt-3">
+                <p>업로드 결과:</p>
                 <ul>
                   <li>추가된 단어: {uploadResult.added}</li>
                   <li>업데이트된 단어: {uploadResult.updated}</li>
                   <li>오류: {uploadResult.errors}</li>
                 </ul>
-                {uploadResult.error_details.length > 0 && (
-                  <>
-                    <p>오류 상세:</p>
-                    <ul>
-                      {uploadResult.error_details.map((error, index) => (
-                        <li key={index}>{error}</li>
-                      ))}
-                    </ul>
-                  </>
-                )}
               </Alert>
             )}
+          </Modal.Body>
+        </Modal>
 
-            <div className="text-end">
-              <Button
-                variant="secondary"
-                className="me-2"
-                onClick={() => setShowUploadModal(false)}
-              >
-                닫기
-              </Button>
-              <Button variant="primary" type="submit">
-                업로드
-              </Button>
-            </div>
-          </Form>
-        </Modal.Body>
-      </Modal>
-
-      {/* 단어 수정 모달 */}
-      <Modal show={showEditModal} onHide={() => setShowEditModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>단어 수정</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form>
-            <Form.Group className="mb-3">
-              <Form.Label>영어</Form.Label>
-              <Form.Control
-                type="text"
-                value={editWord.english}
-                onChange={(e) =>
-                  setEditWord({ ...editWord, english: e.target.value })
-                }
-              />
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label>한국어</Form.Label>
-              <Form.Control
-                type="text"
-                value={editWord.korean}
-                onChange={(e) =>
-                  setEditWord({ ...editWord, korean: e.target.value })
-                }
-              />
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label>레벨</Form.Label>
-              <Form.Select
-                value={editWord.level}
-                onChange={(e) =>
-                  setEditWord({ ...editWord, level: parseInt(e.target.value) })
-                }
-              >
-                <option value={1}>레벨 1</option>
-                <option value={2}>레벨 2</option>
-                <option value={3}>레벨 3</option>
-                <option value={4}>레벨 4</option>
-                <option value={5}>레벨 5</option>
-              </Form.Select>
-            </Form.Group>
-          </Form>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowEditModal(false)}>
-            취소
-          </Button>
-          <Button variant="primary" onClick={handleSaveEdit}>
-            저장
-          </Button>
-        </Modal.Footer>
-      </Modal>
-    </Container>
+        {/* 단어 수정 모달 */}
+        <Modal show={showEditModal} onHide={() => setShowEditModal(false)}>
+          <Modal.Header closeButton>
+            <Modal.Title>단어 수정</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <Form>
+              <Form.Group className="mb-3">
+                <Form.Label>영어</Form.Label>
+                <Form.Control
+                  type="text"
+                  value={editWord.english}
+                  onChange={(e) =>
+                    setEditWord({ ...editWord, english: e.target.value })
+                  }
+                />
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>한국어</Form.Label>
+                <Form.Control
+                  type="text"
+                  value={editWord.korean}
+                  onChange={(e) =>
+                    setEditWord({ ...editWord, korean: e.target.value })
+                  }
+                />
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>레벨</Form.Label>
+                <Form.Select
+                  value={editWord.level}
+                  onChange={(e) =>
+                    setEditWord({
+                      ...editWord,
+                      level: parseInt(e.target.value),
+                    })
+                  }
+                >
+                  <option value="1">레벨 1</option>
+                  <option value="2">레벨 2</option>
+                  <option value="3">레벨 3</option>
+                  <option value="4">레벨 4</option>
+                  <option value="5">레벨 5</option>
+                </Form.Select>
+              </Form.Group>
+            </Form>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={() => setShowEditModal(false)}>
+              취소
+            </Button>
+            <Button variant="primary" onClick={handleSaveEdit}>
+              저장
+            </Button>
+          </Modal.Footer>
+        </Modal>
+      </Container>
+      <Navigationbar />
+    </div>
   );
 };
 

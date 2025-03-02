@@ -8,9 +8,9 @@ import { useButtonFeedback } from "./hooks/useButtonFeedback";
 const colors = {
   primary: "#3797E5",
   background: "#1E2A3A",
-  testBackground: "#17202C",
-  text: "#FFFFFF",
-  border: "#2A3744",
+  testBackground: "#f8f9fa", // 배경색 변경
+  text: "#343a40", // 텍스트 색상 변경
+  border: "#e9ecef",
 };
 
 // 메시지 컴포넌트
@@ -29,14 +29,16 @@ const Message = ({ text, isCorrect }) => (
       paddingTop: "40px",
       animation: "fadeInOut 1.5s ease-out forwards",
       zIndex: 1000,
+      fontFamily: "Inter, sans-serif",
     }}
   >
     <div
       style={{
         color: isCorrect ? "#51CF66" : "white",
         fontSize: "32px",
-        fontWeight: "bold",
+        fontWeight: "600",
         textShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
+        fontFamily: "Inter, sans-serif",
       }}
     >
       {text}
@@ -48,31 +50,18 @@ const Message = ({ text, isCorrect }) => (
 const CountdownScreen = ({ count }) => (
   <div
     style={{
-      position: "fixed",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: "17202C",
+      height: "100vh",
       display: "flex",
       justifyContent: "center",
       alignItems: "center",
-      zIndex: 1000,
-      animation: "fadeOut 0.5s ease-out forwards",
+      backgroundColor: colors.testBackground,
+      color: colors.text,
+      fontSize: "5rem",
+      fontWeight: "bold",
+      fontFamily: "Inter, sans-serif",
     }}
   >
-    <div
-      key={count}
-      style={{
-        fontSize: "180px",
-        fontWeight: "900",
-        color: "white",
-        animation: "fadeOut 0.8s ease-out forwards",
-        textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
-      }}
-    >
-      {count}
-    </div>
+    {count}
   </div>
 );
 
@@ -87,106 +76,152 @@ const GameScreen = ({
   solvedCount,
   answerInputRef,
 }) => (
-  <div
-    style={{
-      position: "fixed",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
+  <Box
+    sx={{
+      minHeight: "100vh",
       backgroundColor: colors.testBackground,
-      color: colors.text,
-      fontSize: "20px",
-      fontWeight: "bold",
-      overflow: "hidden",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "20px",
+      fontFamily: "Inter, sans-serif",
     }}
   >
-    {/* 현재 문제 수 */}
-    <div
-      style={{
+    <Box
+      sx={{
         position: "absolute",
-        top: "73px",
-        left: "50%",
-        transform: "translateX(-50%)",
-        fontSize: "25px",
-        opacity: "50%",
+        top: "20px",
+        right: "20px",
+        display: "flex",
+        alignItems: "center",
+        gap: "10px",
       }}
     >
-      {solvedCount}/10
-    </div>
+      <Typography
+        sx={{
+          color: colors.text,
+          fontWeight: "600",
+          fontSize: "1.2rem",
+          fontFamily: "Inter, sans-serif",
+        }}
+      >
+        시간: {remainingTime}초
+      </Typography>
+    </Box>
 
-    {/* 문제 */}
-    <div
-      style={{
+    <Box
+      sx={{
         position: "absolute",
-        top: "174px",
-        left: "50%",
-        transform: "translateX(-50%)",
-        fontSize: "50px",
-        fontWeight: "bold",
+        top: "20px",
+        left: "20px",
+        display: "flex",
+        alignItems: "center",
+        gap: "10px",
+      }}
+    >
+      <Typography
+        sx={{
+          color: colors.text,
+          fontWeight: "600",
+          fontSize: "1.2rem",
+          fontFamily: "Inter, sans-serif",
+        }}
+      >
+        점수: {score}
+      </Typography>
+    </Box>
+
+    <Box
+      sx={{
+        backgroundColor: "#ffffff",
+        borderRadius: "12px",
+        padding: { xs: "24px", sm: "32px" },
+        width: "90%",
+        maxWidth: "500px",
         textAlign: "center",
+        boxShadow: "0 0 15px rgba(0, 0, 0, 0.1)",
       }}
     >
-      {question.english}
-    </div>
+      <Typography
+        variant="h4"
+        sx={{
+          color: "#343a40",
+          fontWeight: "600",
+          fontSize: { xs: "1.8rem", sm: "2.2rem" },
+          mb: 4,
+          fontFamily: "Inter, sans-serif",
+        }}
+      >
+        {question?.korean}
+      </Typography>
 
-    {/* 남은 시간 */}
-    <div
-      style={{
-        position: "absolute",
-        top: "274px",
-        left: "50%",
-        transform: "translateX(-50%)",
-        fontSize: "25px",
-        opacity: "80%",
-      }}
-    >
-      {Math.floor(remainingTime)} 초
-    </div>
-
-    {/* 현재 점수 */}
-    <div
-      style={{
-        position: "absolute",
-        top: "324px",
-        left: "50%",
-        transform: "translateX(-50%)",
-        fontSize: "20px",
-        opacity: "80%",
-      }}
-    >
-      {score} 점
-    </div>
-
-    {/* 입력 필드 */}
-    <input
-      ref={answerInputRef}
-      type="text"
-      value={answer}
-      onChange={(e) => setAnswer(e.target.value)}
-      onKeyPress={(e) => {
-        if (e.key === "Enter") {
+      <Box
+        component="form"
+        onSubmit={(e) => {
+          e.preventDefault();
           submitAnswer();
-        }
-      }}
-      style={{
+        }}
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          width: "100%",
+        }}
+      >
+        <input
+          ref={answerInputRef}
+          type="text"
+          value={answer}
+          onChange={(e) => setAnswer(e.target.value)}
+          placeholder="영어 단어를 입력하세요"
+          style={{
+            width: "100%",
+            padding: "12px 16px",
+            fontSize: "1.2rem",
+            borderRadius: "8px",
+            border: "1px solid #e9ecef",
+            marginBottom: "20px",
+            fontFamily: "Inter, sans-serif",
+          }}
+          autoFocus
+        />
+
+        <Button
+          type="submit"
+          variant="contained"
+          sx={{
+            backgroundColor: "#6c63ff",
+            color: "#FFFFFF",
+            padding: "12px 24px",
+            fontSize: "1.1rem",
+            fontWeight: "600",
+            borderRadius: "8px",
+            textTransform: "none",
+            fontFamily: "Inter, sans-serif",
+            "&:hover": {
+              backgroundColor: "#5a52d5",
+            },
+          }}
+        >
+          제출
+        </Button>
+      </Box>
+    </Box>
+
+    <Typography
+      sx={{
         position: "absolute",
-        top: "374px",
-        left: "50%",
-        transform: "translateX(-50%)",
-        width: "80%",
-        padding: "12px",
-        fontSize: "18px",
-        textAlign: "center",
-        borderRadius: "8px",
-        outline: "none",
-        backgroundColor: colors.background,
-        border: `1px solid ${colors.border}`,
+        bottom: "20px",
         color: colors.text,
+        fontWeight: "500",
+        fontSize: "1rem",
+        fontFamily: "Inter, sans-serif",
       }}
-      placeholder="한글 뜻을 입력하세요"
-    />
-  </div>
+    >
+      문제 {solvedCount + 1}/30
+    </Typography>
+  </Box>
 );
 
 // 종료 화면 컴포넌트
@@ -212,25 +247,28 @@ const EndScreen = ({ score }) => {
         alignItems: "center",
         justifyContent: "center",
         color: colors.text,
+        fontFamily: "Inter, sans-serif",
       }}
     >
       <Box
         sx={{
-          backgroundColor: "#17202C",
+          backgroundColor: "#ffffff",
           borderRadius: "12px",
           padding: { xs: "24px", sm: "32px" },
           width: "90%",
           maxWidth: "500px",
           textAlign: "center",
+          boxShadow: "0 0 15px rgba(0, 0, 0, 0.1)",
         }}
       >
         <Typography
           variant="h4"
           sx={{
-            color: "#FFFFFF",
-            fontWeight: "bold",
+            color: "#343a40",
+            fontWeight: "600",
             fontSize: { xs: "1.8rem", sm: "2.2rem" },
             mb: 3,
+            fontFamily: "Inter, sans-serif",
           }}
         >
           테스트 종료!
@@ -239,10 +277,11 @@ const EndScreen = ({ score }) => {
         <Typography
           variant="h3"
           sx={{
-            color: "#9b87f5",
+            color: "#6c63ff", // 점수 색상 변경
             fontWeight: "bold",
             fontSize: { xs: "2.2rem", sm: "2.8rem" },
             mb: 4,
+            fontFamily: "Inter, sans-serif",
           }}
         >
           {score} 점
@@ -252,15 +291,16 @@ const EndScreen = ({ score }) => {
           variant="contained"
           onClick={handleReturn}
           sx={{
-            backgroundColor: "#9b87f5",
+            backgroundColor: "#6c63ff", // 버튼 색상 변경
             color: "#FFFFFF",
             padding: { xs: "12px 24px", sm: "16px 32px" },
             fontSize: { xs: "1rem", sm: "1.2rem" },
-            fontWeight: "bold",
-            borderRadius: "12px",
+            fontWeight: "600",
+            borderRadius: "8px",
             textTransform: "none",
+            fontFamily: "Inter, sans-serif",
             "&:hover": {
-              backgroundColor: "rgba(155, 135, 245, 0.9)",
+              backgroundColor: "#5a52d5", // 호버 색상 변경
             },
           }}
         >
