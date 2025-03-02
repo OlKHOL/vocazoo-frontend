@@ -56,6 +56,9 @@ const Register = () => {
       console.log("회원가입 시도:", { username, password });
       const response = await api.post("/auth/register", { username, password });
       console.log("회원가입 응답:", response);
+
+      // 성공 메시지 표시 후 로그인 페이지로 이동
+      alert("회원가입이 완료되었습니다. 로그인해주세요.");
       navigate("/login", {
         state: { message: "회원가입이 완료되었습니다. 로그인해주세요." },
       });

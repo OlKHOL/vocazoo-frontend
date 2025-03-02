@@ -11,7 +11,7 @@ console.log("Current environment:", process.env.NODE_ENV);
 
 const instance = axios.create({
   baseURL,
-  withCredentials: true,
+  withCredentials: false,
   headers: {
     "Content-Type": "application/json",
   },
