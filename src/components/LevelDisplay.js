@@ -31,26 +31,28 @@ const LevelDisplay = () => {
     <Box
       onClick={() => navigate("/level")}
       sx={{
-        position: "absolute",
-        top: { xs: "15px", sm: "20px" },
-        left: { xs: "15px", sm: "20px" },
         cursor: "pointer",
         display: "flex",
         flexDirection: "column",
         gap: 1,
-        zIndex: 1000,
-        minWidth: "150px",
+        backgroundColor: "rgba(30, 42, 58, 0.8)",
+        backdropFilter: "blur(8px)",
+        padding: "12px 16px",
+        borderRadius: "12px",
+        minWidth: "180px",
+        transition: "all 0.2s ease",
+        "&:hover": {
+          backgroundColor: "rgba(30, 42, 58, 0.95)",
+          transform: "translateY(-2px)",
+        },
       }}
     >
       <Typography
         sx={{
           color: "#FFFFFF",
-          fontSize: { xs: "0.9rem", sm: "1rem" },
-          opacity: 0.9,
-          "&:hover": {
-            color: "#00E5FF",
-          },
-          transition: "color 0.2s ease",
+          fontSize: "1.1rem",
+          fontWeight: "bold",
+          textAlign: "center",
         }}
       >
         {levelInfo.level >= 100
