@@ -17,11 +17,16 @@ const ProtectedRoute = ({ children }) => {
       }
 
       try {
-        await api.get("/check_auth");
-        setIsValid(true);
+        const response = await api.get("/check_auth");
+        if (response.status === 200) {
+          setIsValid(true);
+        } else {
+          setIsValid(false);
+        }
       } catch (error) {
-        localStorage.removeItem("token");
+        console.error("Auth check error:", error);
         setIsValid(false);
+        localStorage.removeItem("token");
       } finally {
         setIsValidating(false);
       }
@@ -35,6 +40,7 @@ const ProtectedRoute = ({ children }) => {
     const handleAuthError = () => {
       setIsValid(false);
       setIsValidating(false);
+      localStorage.removeItem("token");
       navigate("/login", { replace: true });
     };
 

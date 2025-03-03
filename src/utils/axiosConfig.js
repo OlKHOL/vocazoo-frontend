@@ -17,12 +17,6 @@ const instance = axios.create({
 // 요청 인터셉터 추가
 instance.interceptors.request.use(
   (config) => {
-    console.log(
-      "API Request:",
-      config.method.toUpperCase(),
-      config.url,
-      config.data
-    );
     const token = localStorage.getItem("token");
     if (token) {
       // Bearer 접두사가 없는 경우에만 추가
@@ -33,7 +27,6 @@ instance.interceptors.request.use(
     return config;
   },
   (error) => {
-    console.error("API Request Error:", error);
     return Promise.reject(error);
   }
 );
@@ -41,33 +34,14 @@ instance.interceptors.request.use(
 // 응답 인터셉터 추가
 instance.interceptors.response.use(
   (response) => {
-    console.log("API Response:", response.status, response.data);
     return response;
   },
   (error) => {
-    console.error(
-      "API Response Error:",
-      error.response?.status,
-      error.response?.data
-    );
-
-    // 401 에러 처리
-    if (error.response?.status === 401) {
+    // 401 또는 422 에러 처리
+    if (error.response?.status === 401 || error.response?.status === 422) {
       localStorage.removeItem("token");
-      // React Router의 navigate를 사용하기 위해 이벤트 발생
       window.dispatchEvent(new CustomEvent("authError"));
-      return Promise.reject(error);
     }
-
-    // 422 에러 처리
-    if (error.response?.status === 422) {
-      console.error("Token verification failed:", error.response.data);
-      localStorage.removeItem("token");
-      // React Router의 navigate를 사용하기 위해 이벤트 발생
-      window.dispatchEvent(new CustomEvent("authError"));
-      return Promise.reject(error);
-    }
-
     return Promise.reject(error);
   }
 );

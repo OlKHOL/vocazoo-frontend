@@ -47,21 +47,19 @@ const AdminPage = () => {
       try {
         const response = await api.get("/check_admin");
         setIsAdmin(response.data.is_admin);
-        if (!response.data.is_admin) {
-          navigate("/");
-        } else {
+        if (response.data.is_admin) {
           fetchWords(1);
         }
       } catch (error) {
         console.error("관리자 권한 확인 오류:", error);
-        navigate("/");
+        setIsAdmin(false);
       } finally {
         setIsLoading(false);
       }
     };
 
     checkAdmin();
-  }, [navigate]);
+  }, []);
 
   // 단어 목록 가져오기
   const fetchWords = async (page) => {
@@ -229,13 +227,24 @@ const AdminPage = () => {
     );
   };
 
-  if (isLoading && !isAdmin) {
+  if (isLoading) {
     return (
       <Container
         className="d-flex justify-content-center align-items-center"
         style={{ minHeight: "80vh" }}
       >
         <Spinner animation="border" />
+      </Container>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <Container
+        className="d-flex justify-content-center align-items-center"
+        style={{ minHeight: "80vh" }}
+      >
+        <Alert variant="danger">관리자 권한이 필요합니다.</Alert>
       </Container>
     );
   }
