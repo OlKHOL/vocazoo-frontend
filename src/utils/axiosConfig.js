@@ -19,10 +19,7 @@ instance.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
     if (token) {
-      // Bearer 접두사가 없는 경우에만 추가
-      config.headers.Authorization = token.startsWith("Bearer ")
-        ? token
-        : `Bearer ${token}`;
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
@@ -33,12 +30,9 @@ instance.interceptors.request.use(
 
 // 응답 인터셉터 추가
 instance.interceptors.response.use(
-  (response) => {
-    return response;
-  },
+  (response) => response,
   (error) => {
-    // 401 또는 422 에러 처리
-    if (error.response?.status === 401 || error.response?.status === 422) {
+    if (error.response?.status === 401) {
       localStorage.removeItem("token");
       window.dispatchEvent(new CustomEvent("authError"));
     }

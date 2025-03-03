@@ -17,14 +17,11 @@ const ProtectedRoute = ({ children }) => {
       }
 
       try {
-        const response = await api.get("/check_auth");
+        const response = await api.get("/auth/account");
         if (response.status === 200) {
           setIsValid(true);
-        } else {
-          setIsValid(false);
         }
       } catch (error) {
-        console.error("Auth check error:", error);
         setIsValid(false);
         localStorage.removeItem("token");
       } finally {
@@ -49,7 +46,16 @@ const ProtectedRoute = ({ children }) => {
   }, [navigate]);
 
   if (isValidating) {
-    return null; // 또는 로딩 스피너
+    return (
+      <div
+        className="d-flex justify-content-center align-items-center"
+        style={{ minHeight: "100vh" }}
+      >
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    );
   }
 
   if (!isValid) {

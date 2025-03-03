@@ -12,12 +12,24 @@ import {
   Alert,
   Spinner,
   Nav,
+  Badge,
+  Tooltip,
+  OverlayTrigger,
 } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import api from "../utils/axiosConfig";
 import "../styles/AdminPage.css";
 import Navigationbar from "../components/Navigationbar";
-import axios from "axios";
+import {
+  FaEdit,
+  FaTrash,
+  FaUpload,
+  FaPlus,
+  FaSearch,
+  FaCog,
+  FaFileExcel,
+  FaFileCsv,
+} from "react-icons/fa";
 
 const AdminPage = () => {
   const navigate = useNavigate();
@@ -46,13 +58,23 @@ const AdminPage = () => {
     const checkAdmin = async () => {
       try {
         const response = await api.get("/check_admin");
-        setIsAdmin(response.data.is_admin);
-        if (response.data.is_admin) {
-          fetchWords(1);
+        if (response.status === 200) {
+          setIsAdmin(response.data.is_admin);
+          if (response.data.is_admin) {
+            fetchWords(1);
+          }
+        } else {
+          setIsAdmin(false);
+          setError("관리자 권한 확인에 실패했습니다.");
         }
       } catch (error) {
         console.error("관리자 권한 확인 오류:", error);
         setIsAdmin(false);
+        if (error.response?.status === 403) {
+          setError("관리자 권한이 필요합니다.");
+        } else {
+          setError("관리자 권한 확인 중 오류가 발생했습니다.");
+        }
       } finally {
         setIsLoading(false);
       }
@@ -132,15 +154,26 @@ const AdminPage = () => {
   const handleFileSelect = (event) => {
     const file = event.target.files[0];
     if (file) {
-      setFile(file);
+      if (file.type === "text/csv" || file.name.endsWith(".xlsx")) {
+        setFile(file);
+        setError("");
+      } else {
+        setError("CSV 또는 Excel 파일만 업로드 가능합니다.");
+        setFile(null);
+      }
     }
   };
 
   // 파일 업로드 처리
   const handleFileUpload = async (event) => {
     event.preventDefault();
+    if (!isAdmin) {
+      setError("관리자 권한이 필요합니다.");
+      return;
+    }
+
     if (!file) {
-      setUploadResult("파일을 선택해주세요.");
+      setError("파일을 선택해주세요.");
       return;
     }
 
@@ -148,39 +181,31 @@ const AdminPage = () => {
       const formData = new FormData();
       formData.append("file", file);
 
-      console.log("Uploading file:", file.name);
-      console.log("FormData contents:", Array.from(formData.entries()));
-
       const response = await api.post("/admin/upload_words", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
-        validateStatus: function (status) {
-          return status < 500; // 500 미만의 상태 코드는 에러로 처리하지 않음
-        },
       });
-
-      console.log("Upload response:", response);
 
       if (response.status === 200) {
         setUploadResult(
           `업로드 성공: ${response.data.added}개 추가, ${response.data.updated}개 수정됨`
         );
-        fetchWords(currentPage); // 단어 목록 새로고침
-        setFile(null); // 파일 초기화
-      } else {
-        setUploadResult(
-          `업로드 실패: ${
-            response.data.error || "알 수 없는 오류가 발생했습니다."
-          }`
-        );
+        fetchWords(currentPage);
+        setFile(null);
+        setTimeout(() => {
+          setShowUploadModal(false);
+        }, 2000);
       }
     } catch (error) {
       console.error("File upload error:", error);
-      console.error("Error response:", error.response);
-      setUploadResult(
-        `업로드 오류: ${error.response?.data?.error || error.message}`
-      );
+      if (error.response?.status === 403) {
+        setError("관리자 권한이 필요합니다.");
+      } else {
+        setError(
+          `업로드 오류: ${error.response?.data?.error || error.message}`
+        );
+      }
     }
   };
 
@@ -229,32 +254,51 @@ const AdminPage = () => {
 
   if (isLoading) {
     return (
-      <Container
-        className="d-flex justify-content-center align-items-center"
-        style={{ minHeight: "80vh" }}
-      >
-        <Spinner animation="border" />
-      </Container>
+      <div className="admin-page-wrapper">
+        <Container
+          className="d-flex justify-content-center align-items-center"
+          style={{ minHeight: "80vh" }}
+        >
+          <div className="text-center">
+            <Spinner animation="border" />
+            <p className="mt-3 text-muted">로딩 중...</p>
+          </div>
+        </Container>
+        <Navigationbar />
+      </div>
     );
   }
 
   if (!isAdmin) {
     return (
-      <Container
-        className="d-flex justify-content-center align-items-center"
-        style={{ minHeight: "80vh" }}
-      >
-        <Alert variant="danger">관리자 권한이 필요합니다.</Alert>
-      </Container>
+      <div className="admin-page-wrapper">
+        <Container
+          className="d-flex justify-content-center align-items-center"
+          style={{ minHeight: "80vh" }}
+        >
+          <Alert variant="danger" className="text-center">
+            <FaCog className="mb-2" style={{ fontSize: "2rem" }} />
+            <h4>관리자 권한이 필요합니다</h4>
+            <p className="mb-0">
+              이 페이지에 접근하려면 관리자 권한이 필요합니다.
+            </p>
+          </Alert>
+        </Container>
+        <Navigationbar />
+      </div>
     );
   }
 
   return (
     <div className="admin-page-wrapper">
       <Container className="admin-page py-4 mb-5">
-        <h1 className="mb-4 text-center">관리자 페이지</h1>
+        <h1 className="mb-4">관리자 페이지</h1>
 
-        {error && <Alert variant="danger">{error}</Alert>}
+        {error && (
+          <Alert variant="danger" className="mb-4">
+            {error}
+          </Alert>
+        )}
 
         <Nav
           variant="tabs"
@@ -268,58 +312,52 @@ const AdminPage = () => {
           <Nav.Item>
             <Nav.Link eventKey="wordsets">단어장 관리</Nav.Link>
           </Nav.Item>
-          <Nav.Item>
-            <Nav.Link eventKey="tools">관리 도구</Nav.Link>
-          </Nav.Item>
         </Nav>
 
         {activeTab === "words" && (
-          <Card className="mb-4">
-            <Card.Header as="h5">단어 관리</Card.Header>
+          <Card>
+            <Card.Header className="d-flex justify-content-between align-items-center">
+              <span>단어 관리</span>
+              <Button
+                variant="success"
+                onClick={() => setShowUploadModal(true)}
+                size="sm"
+              >
+                <FaUpload className="me-1" />
+                파일 업로드
+              </Button>
+            </Card.Header>
             <Card.Body>
-              <Row className="mb-3">
-                <Col md={6}>
-                  <Form onSubmit={handleSearch}>
-                    <Row>
-                      <Col md={5}>
-                        <Form.Control
-                          type="text"
-                          placeholder="검색어 입력..."
-                          value={searchTerm}
-                          onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                      </Col>
-                      <Col md={3}>
-                        <Form.Select
-                          value={selectedLevel}
-                          onChange={(e) => setSelectedLevel(e.target.value)}
-                        >
-                          <option value="">모든 레벨</option>
-                          <option value="1">레벨 1</option>
-                          <option value="2">레벨 2</option>
-                          <option value="3">레벨 3</option>
-                          <option value="4">레벨 4</option>
-                          <option value="5">레벨 5</option>
-                        </Form.Select>
-                      </Col>
-                      <Col md={4}>
-                        <Button type="submit" variant="primary">
-                          검색
-                        </Button>
-                      </Col>
-                    </Row>
-                  </Form>
-                </Col>
-                <Col md={6} className="text-end">
-                  <Button
-                    variant="success"
-                    onClick={() => setShowUploadModal(true)}
-                    className="me-2"
-                  >
-                    CSV 업로드
-                  </Button>
-                </Col>
-              </Row>
+              <Form onSubmit={handleSearch} className="mb-4">
+                <Row>
+                  <Col md={6}>
+                    <Form.Control
+                      type="text"
+                      placeholder="검색어 입력..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                  </Col>
+                  <Col md={3}>
+                    <Form.Select
+                      value={selectedLevel}
+                      onChange={(e) => setSelectedLevel(e.target.value)}
+                    >
+                      <option value="">모든 레벨</option>
+                      <option value="1">레벨 1</option>
+                      <option value="2">레벨 2</option>
+                      <option value="3">레벨 3</option>
+                      <option value="4">레벨 4</option>
+                      <option value="5">레벨 5</option>
+                    </Form.Select>
+                  </Col>
+                  <Col md={3}>
+                    <Button type="submit" variant="primary" className="w-100">
+                      검색
+                    </Button>
+                  </Col>
+                </Row>
+              </Form>
 
               {isLoading ? (
                 <div className="text-center py-4">
@@ -331,29 +369,35 @@ const AdminPage = () => {
                     <Table striped bordered hover>
                       <thead>
                         <tr>
-                          <th>ID</th>
                           <th>영어</th>
                           <th>한국어</th>
                           <th>레벨</th>
-                          <th>사용됨</th>
-                          <th>마지막 수정</th>
+                          <th>상태</th>
                           <th>작업</th>
                         </tr>
                       </thead>
                       <tbody>
                         {words.map((word) => (
                           <tr key={word.id}>
-                            <td>{word.id}</td>
                             <td>{word.english}</td>
                             <td>{word.korean}</td>
-                            <td>{word.level}</td>
-                            <td>{word.used ? "예" : "아니오"}</td>
                             <td>
-                              {word.last_modified
-                                ? new Date(
-                                    word.last_modified
-                                  ).toLocaleDateString()
-                                : "-"}
+                              <Badge
+                                bg={
+                                  word.level <= 2
+                                    ? "success"
+                                    : word.level <= 4
+                                    ? "warning"
+                                    : "danger"
+                                }
+                              >
+                                레벨 {word.level}
+                              </Badge>
+                            </td>
+                            <td>
+                              <Badge bg={word.used ? "primary" : "secondary"}>
+                                {word.used ? "사용됨" : "미사용"}
+                              </Badge>
                             </td>
                             <td>
                               <Button
@@ -362,14 +406,14 @@ const AdminPage = () => {
                                 onClick={() => handleEditModalOpen(word)}
                                 className="me-1"
                               >
-                                수정
+                                <FaEdit />
                               </Button>
                               <Button
                                 variant="outline-danger"
                                 size="sm"
                                 onClick={() => handleDeleteWord(word.id)}
                               >
-                                삭제
+                                <FaTrash />
                               </Button>
                             </td>
                           </tr>
@@ -385,47 +429,20 @@ const AdminPage = () => {
         )}
 
         {activeTab === "wordsets" && (
-          <Card className="mb-4">
-            <Card.Header as="h5">단어장 관리</Card.Header>
+          <Card>
+            <Card.Header className="d-flex justify-content-between align-items-center">
+              <span>단어장 관리</span>
+              <Button variant="primary" onClick={handleCreateWordSet} size="sm">
+                <FaPlus className="me-1" />새 단어장 생성
+              </Button>
+            </Card.Header>
             <Card.Body>
-              <Row className="mb-3">
-                <Col>
-                  <Button variant="primary" onClick={handleCreateWordSet}>
-                    새 단어장 생성
-                  </Button>
-                </Col>
-              </Row>
-              <p>
-                새 단어장을 생성하면 사용되지 않은 단어들 중에서 무작위로 30개를
-                선택하여 단어장을 만듭니다. 생성된 단어장은 기본적으로 비활성화
-                상태입니다.
-              </p>
-            </Card.Body>
-          </Card>
-        )}
-
-        {activeTab === "tools" && (
-          <Card className="mb-4">
-            <Card.Header as="h5">관리 도구</Card.Header>
-            <Card.Body>
-              <Row className="mb-3">
-                <Col>
-                  <h6>관리자 권한 관리</h6>
-                  <p>
-                    관리자 권한을 부여하거나 박탈하려면 다음 명령어를
-                    사용하세요:
-                  </p>
-                  <div className="bg-light p-3 rounded">
-                    <code>
-                      python backend/create_admin.py --username 사용자명
-                    </code>
-                    <br />
-                    <code>
-                      python backend/revoke_admin.py --username 사용자명
-                    </code>
-                  </div>
-                </Col>
-              </Row>
+              <div className="bg-light p-3 rounded">
+                <p className="mb-0">
+                  새 단어장을 생성하면 사용되지 않은 단어들 중에서 무작위로
+                  30개를 선택하여 단어장을 만듭니다.
+                </p>
+              </div>
             </Card.Body>
           </Card>
         )}
@@ -437,41 +454,107 @@ const AdminPage = () => {
             setShowUploadModal(false);
             setFile(null);
             setUploadResult(null);
+            setError("");
           }}
         >
           <Modal.Header closeButton>
-            <Modal.Title>CSV 파일 업로드</Modal.Title>
+            <Modal.Title>단어 파일 업로드</Modal.Title>
           </Modal.Header>
           <Modal.Body>
-            <Form onSubmit={handleFileUpload}>
-              <Form.Group controlId="formFile" className="mb-3">
-                <Form.Label>CSV 파일 선택</Form.Label>
-                <Form.Control
-                  type="file"
-                  accept=".csv"
-                  onChange={handleFileSelect}
-                  id="csvFileUpload"
-                  name="file"
-                  className="form-control"
-                />
-                <Form.Text className="text-muted">
-                  CSV 파일은 english, korean, level 열을 포함해야 합니다.
-                </Form.Text>
-              </Form.Group>
-              <Button variant="primary" type="submit" disabled={!file}>
-                업로드
-              </Button>
-            </Form>
+            <div
+              className="upload-area p-4 text-center border rounded"
+              style={{
+                borderStyle: "dashed",
+                borderColor: "#6c63ff",
+                backgroundColor: "#f8f9fa",
+                cursor: "pointer",
+              }}
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const droppedFile = e.dataTransfer.files[0];
+                if (
+                  droppedFile &&
+                  (droppedFile.type === "text/csv" ||
+                    droppedFile.name.endsWith(".xlsx"))
+                ) {
+                  setFile(droppedFile);
+                  setError("");
+                } else {
+                  setError("CSV 또는 Excel 파일만 업로드 가능합니다.");
+                }
+              }}
+              onClick={() => document.getElementById("fileInput").click()}
+            >
+              <input
+                type="file"
+                id="fileInput"
+                accept=".csv,.xlsx"
+                onChange={handleFileSelect}
+                style={{ display: "none" }}
+              />
+              <FaFileExcel
+                className="mb-3"
+                style={{ fontSize: "3rem", color: "#6c63ff" }}
+              />
+              <h5>파일을 드래그하거나 클릭하여 업로드</h5>
+              <p className="text-muted mb-0">
+                CSV 또는 Excel 파일을 지원합니다
+              </p>
+            </div>
+
+            {file && (
+              <div className="mt-3 p-3 bg-light rounded">
+                <div className="d-flex align-items-center justify-content-between">
+                  <div>
+                    <FaFileCsv className="me-2" />
+                    <span>{file.name}</span>
+                  </div>
+                  <Button
+                    variant="outline-danger"
+                    size="sm"
+                    onClick={() => setFile(null)}
+                  >
+                    <FaTrash />
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {error && (
+              <Alert variant="danger" className="mt-3">
+                {error}
+              </Alert>
+            )}
 
             {uploadResult && (
               <Alert
                 variant={uploadResult.includes("성공") ? "success" : "danger"}
                 className="mt-3"
               >
-                <p>{uploadResult}</p>
+                <p className="mb-0">{uploadResult}</p>
               </Alert>
             )}
           </Modal.Body>
+          <Modal.Footer>
+            <Button
+              variant="secondary"
+              onClick={() => setShowUploadModal(false)}
+            >
+              취소
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleFileUpload}
+              disabled={!file}
+            >
+              업로드
+            </Button>
+          </Modal.Footer>
         </Modal>
 
         {/* 단어 수정 모달 */}
