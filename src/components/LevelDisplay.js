@@ -31,6 +31,10 @@ const LevelDisplay = () => {
     <Box
       onClick={() => navigate("/level")}
       sx={{
+        position: "fixed",
+        top: "20px",
+        left: "20px",
+        zIndex: 1000,
         cursor: "pointer",
         display: "flex",
         flexDirection: "column",

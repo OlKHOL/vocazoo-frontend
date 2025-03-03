@@ -47,16 +47,7 @@ const Home = () => {
         overflow: "hidden",
       }}
     >
-      <Box
-        sx={{
-          position: "fixed",
-          top: "20px",
-          left: "20px",
-          zIndex: 1000,
-        }}
-      >
-        <LevelDisplay />
-      </Box>
+      <LevelDisplay />
       <Container
         maxWidth="sm"
         sx={{
