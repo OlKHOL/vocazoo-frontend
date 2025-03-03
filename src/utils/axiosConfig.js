@@ -50,10 +50,22 @@ instance.interceptors.response.use(
       error.response?.status,
       error.response?.data
     );
+
+    // 401 에러 처리
     if (error.response?.status === 401) {
-      // 401 에러가 발생해도 로그인 페이지로 리다이렉트하지 않음
-      console.error("Authentication error:", error);
+      localStorage.removeItem("token");
+      window.location.href = "/login";
+      return Promise.reject(error);
     }
+
+    // 422 에러 처리
+    if (error.response?.status === 422) {
+      console.error("Token verification failed:", error.response.data);
+      localStorage.removeItem("token");
+      window.location.href = "/login";
+      return Promise.reject(error);
+    }
+
     return Promise.reject(error);
   }
 );
