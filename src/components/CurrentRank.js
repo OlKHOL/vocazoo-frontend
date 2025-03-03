@@ -7,23 +7,57 @@ import LockIcon from "@mui/icons-material/Lock";
 const CurrentRank = () => {
   const [rankInfo, setRankInfo] = useState(null);
   const [userLevel, setUserLevel] = useState(null);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [rankResponse, levelResponse] = await Promise.all([
-          api.get("/rankings"),
-          api.get("/user/level"),
+          api.get("/auth/account"),
+          api.get("/auth/account"),
         ]);
-        setRankInfo(rankResponse.data.currentUser);
-        setUserLevel(levelResponse.data.level);
+
+        if (rankResponse.data && levelResponse.data) {
+          setRankInfo({
+            rank: rankResponse.data.rank || 0,
+            username: rankResponse.data.username || "User",
+            score: rankResponse.data.score || 0,
+          });
+          setUserLevel(levelResponse.data.level || 1);
+        }
       } catch (error) {
         console.error("Failed to fetch data:", error);
+        setError("랭킹 정보를 불러오는데 실패했습니다.");
       }
     };
     fetchData();
   }, []);
+
+  if (error) {
+    return (
+      <Paper
+        sx={{
+          p: { xs: 1.8, sm: 2.7 },
+          mb: 2,
+          backgroundColor: "#17202C",
+          borderRadius: "12px",
+          width: "90%",
+          mx: "auto",
+        }}
+      >
+        <Typography
+          sx={{
+            color: "#FF4444",
+            fontSize: "1rem",
+            textAlign: "center",
+          }}
+        >
+          {error}
+        </Typography>
+      </Paper>
+    );
+  }
 
   if (!rankInfo || !userLevel) return null;
 

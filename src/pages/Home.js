@@ -47,7 +47,20 @@ const Home = () => {
         overflow: "hidden",
       }}
     >
-      <LevelDisplay />
+      <Box
+        sx={{
+          position: "fixed",
+          top: "20px",
+          left: "20px",
+          zIndex: 1000,
+          display: "flex",
+          flexDirection: "column",
+          gap: 2,
+        }}
+      >
+        <LevelDisplay />
+        <CurrentRank />
+      </Box>
       <Container
         maxWidth="sm"
         sx={{
@@ -72,10 +85,6 @@ const Home = () => {
         >
           VOCAZOO
         </Typography>
-
-        <Box sx={{ width: "100%", mb: { xs: 4, sm: 5 } }}>
-          <CurrentRank />
-        </Box>
 
         <Box
           sx={{

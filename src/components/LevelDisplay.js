@@ -5,20 +5,60 @@ import api from "../utils/axiosConfig";
 
 const LevelDisplay = () => {
   const [levelInfo, setLevelInfo] = useState(null);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchLevelInfo = async () => {
       try {
-        const response = await api.get("/user/level");
-        setLevelInfo(response.data);
+        const response = await api.get("/auth/account");
+        if (response.data) {
+          setLevelInfo({
+            level: response.data.level || 1,
+            current_exp: response.data.current_exp || 0,
+            required_exp: response.data.required_exp || 100,
+          });
+        }
       } catch (error) {
         console.error("Failed to fetch level info:", error);
+        setError("레벨 정보를 불러오는데 실패했습니다.");
       }
     };
 
     fetchLevelInfo();
   }, []);
+
+  if (error) {
+    return (
+      <Box
+        sx={{
+          position: "fixed",
+          top: "20px",
+          left: "20px",
+          zIndex: 1000,
+          cursor: "pointer",
+          display: "flex",
+          flexDirection: "column",
+          gap: 1,
+          backgroundColor: "rgba(30, 42, 58, 0.8)",
+          backdropFilter: "blur(8px)",
+          padding: "12px 16px",
+          borderRadius: "12px",
+          minWidth: "180px",
+        }}
+      >
+        <Typography
+          sx={{
+            color: "#FF4444",
+            fontSize: "1rem",
+            textAlign: "center",
+          }}
+        >
+          {error}
+        </Typography>
+      </Box>
+    );
+  }
 
   if (!levelInfo) return null;
 
