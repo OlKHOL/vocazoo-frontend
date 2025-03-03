@@ -22,15 +22,17 @@ const ProtectedRoute = ({ children }) => {
           setIsValid(true);
         }
       } catch (error) {
+        console.error("Auth check error:", error);
         setIsValid(false);
         localStorage.removeItem("token");
+        navigate("/login", { replace: true });
       } finally {
         setIsValidating(false);
       }
     };
 
     checkAuth();
-  }, [token]);
+  }, [token, navigate]);
 
   // authError 이벤트 처리
   useEffect(() => {
