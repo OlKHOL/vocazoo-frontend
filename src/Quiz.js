@@ -340,19 +340,22 @@ const Quiz = () => {
   // 테스트 시작
   useEffect(() => {
     const startTestAndFetchQuestion = async () => {
-      if (gameState === "countdown" && countdown === 1) {
-        const token = localStorage.getItem("token");
-        const word_set_id = localStorage.getItem("current_word_set_id");
+      try {
+        const wordSetId = localStorage.getItem("current_word_set_id");
+        if (!wordSetId) {
+          navigate("/");
+          return;
+        }
 
         const response = await api.post(
-          "/start_test",
+          "/quiz/start",
           {
-            word_set_id: word_set_id,
+            word_set_id: wordSetId,
           },
           {
             headers: {
               "Content-Type": "application/json",
-              Authorization: token,
+              Authorization: localStorage.getItem("token"),
             },
           }
         );
@@ -361,23 +364,27 @@ const Quiz = () => {
           console.error("테스트 시작 중 오류가 발생했습니다");
           return;
         }
+
         setGameState("playing");
-        fetchQuestion();
+        await fetchQuestion();
+      } catch (error) {
+        console.error("Error starting test:", error);
+        navigate("/");
       }
     };
 
     startTestAndFetchQuestion();
-  }, [gameState, countdown]);
+  }, [gameState, navigate]);
 
   // 게임 종료 처리를 관리하는 useEffect
   useEffect(() => {
     const handleGameEnd = async () => {
       try {
-        const finalScoreResponse = await api.get("/get_final_score");
-        const finalScore = finalScoreResponse.data.final_score;
+        const finalScoreResponse = await api.get("/quiz/score");
+        const finalScore = finalScoreResponse.data.score;
         setScore(finalScore);
 
-        await api.post("/save_test_result", {
+        await api.post("/quiz/end", {
           score: finalScore,
           wrong_answers: wrongAnswers,
         });
@@ -396,7 +403,7 @@ const Quiz = () => {
     if (gameState === "playing") {
       const scoreTimer = setInterval(async () => {
         try {
-          const response = await api.get("/get_score");
+          const response = await api.get("/quiz/score");
           const data = response.data;
           setScore(data.score);
           setRemainingTime(data.remaining_time);
@@ -424,7 +431,7 @@ const Quiz = () => {
 
   const fetchQuestion = async () => {
     try {
-      const response = await api.get("/get_question");
+      const response = await api.get("/quiz/question");
       const data = response.data;
 
       if (Object.keys(data).length === 0) {
@@ -445,7 +452,7 @@ const Quiz = () => {
     if (!question || !answer) return;
 
     try {
-      const response = await api.post("/check_answer", {
+      const response = await api.post("/quiz/check", {
         question: question,
         answer: answer.trim(),
       });

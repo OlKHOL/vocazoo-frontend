@@ -38,7 +38,7 @@ const AccountPage = () => {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const response = await api.get("/account/info");
+        const response = await api.get("/auth/account");
         setUserData(response.data);
         setNewUsername(response.data.username);
       } catch (error) {
@@ -57,7 +57,7 @@ const AccountPage = () => {
   const handleUpdateUsername = async () => {
     playFeedback();
     try {
-      await api.post("/update_username", { username: newUsername });
+      await api.post("/auth/username", { username: newUsername });
       setUserData((prev) => ({ ...prev, username: newUsername }));
       setOpenDialog(false);
     } catch (error) {

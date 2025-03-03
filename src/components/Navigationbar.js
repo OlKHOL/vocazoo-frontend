@@ -5,6 +5,7 @@ import HomeIcon from "@mui/icons-material/Home";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import SettingsIcon from "@mui/icons-material/Settings";
+import SchoolIcon from "@mui/icons-material/School";
 import { useButtonFeedback } from "../hooks/useButtonFeedback";
 import api from "../utils/axiosConfig";
 
@@ -18,13 +19,18 @@ const Navigationbar = () => {
     // 관리자 권한 확인
     const checkAdmin = async () => {
       try {
-        const token = localStorage.getItem("token");
-        if (token) {
-          const response = await api.get("/check_admin");
-          setIsAdmin(response.data.is_admin);
-        }
+        const response = await api.get("/auth/check_admin");
+        setIsAdmin(response.data.is_admin);
       } catch (error) {
-        console.error("관리자 권한 확인 오류:", error);
+        try {
+          const token = localStorage.getItem("token");
+          if (token) {
+            const response = await api.get("/auth/check_admin");
+            setIsAdmin(response.data.is_admin);
+          }
+        } catch (error) {
+          console.error("관리자 권한 확인 오류:", error);
+        }
       }
     };
 
@@ -66,6 +72,20 @@ const Navigationbar = () => {
         }}
       >
         <HomeIcon sx={{ fontSize: "28px" }} />
+      </IconButton>
+
+      <IconButton
+        onClick={() => handleNavigation("/level")}
+        sx={{
+          color: isActive("/level") ? "#9b87f5" : "#FFFFFF",
+          transition: "all 0.2s ease",
+          "&:hover": {
+            color: "#9b87f5",
+            transform: "translateY(-2px)",
+          },
+        }}
+      >
+        <SchoolIcon sx={{ fontSize: "28px" }} />
       </IconButton>
 
       <IconButton

@@ -55,7 +55,7 @@ const EditWordDialog = ({ open, onClose, wordSet, onSave }) => {
     try {
       const token = localStorage.getItem("token");
       await api.put(
-        `/admin/edit_word_set/${wordSet.id}`,
+        `/admin/word_sets/${wordSet.id}`,
         { words },
         { headers: { Authorization: token } }
       );
@@ -198,10 +198,10 @@ const WordSetViewer = () => {
   const fetchWordSets = async () => {
     try {
       setLoading(true);
-      const response = await api.get("/get_word_sets");
+      const response = await api.get("/admin/word_sets");
       setWordSets(response.data);
 
-      const adminResponse = await api.get("/check_admin");
+      const adminResponse = await api.get("/auth/check_admin");
       setIsAdmin(adminResponse.data.is_admin);
     } catch (error) {
       console.error("Error fetching word sets:", error);
@@ -221,7 +221,7 @@ const WordSetViewer = () => {
 
   const handleStartTest = async (wordSetId) => {
     try {
-      const response = await api.post("/start_test", {
+      const response = await api.post("/quiz/start", {
         word_set_id: wordSetId,
       });
       if (response.status === 200) {
@@ -236,7 +236,7 @@ const WordSetViewer = () => {
   const handleViewWords = async (wordSetId) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await api.get(`/word_set/${wordSetId}`, {
+      const response = await api.get(`/admin/word_sets/${wordSetId}`, {
         headers: { Authorization: token },
       });
       setSelectedSet(response.data);
@@ -250,7 +250,7 @@ const WordSetViewer = () => {
     if (window.confirm("정말로 이 단어장을 삭제하시겠습니까?")) {
       try {
         const token = localStorage.getItem("token");
-        await api.delete(`/admin/delete_word_set/${wordSetId}`, {
+        await api.delete(`/admin/word_sets/${wordSetId}`, {
           headers: { Authorization: token },
         });
         fetchWordSets();
@@ -263,7 +263,7 @@ const WordSetViewer = () => {
   const handleEdit = async (wordSet) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await api.get(`/word_set/${wordSet.id}`, {
+      const response = await api.get(`/admin/word_sets/${wordSet.id}`, {
         headers: { Authorization: token },
       });
       setSelectedSetForEdit(response.data);
@@ -296,7 +296,7 @@ const WordSetViewer = () => {
   const handleExport = async () => {
     try {
       const token = localStorage.getItem("token");
-      await api.get("/admin/export_word_sets", {
+      await api.get("/admin/word_sets/export", {
         headers: { Authorization: token },
       });
     } catch (error) {
@@ -306,8 +306,8 @@ const WordSetViewer = () => {
 
   const handleCreateWordSet = async () => {
     try {
-      await api.post("/admin/create_word_set");
-      const response = await api.get("/get_word_sets");
+      await api.post("/admin/word_sets");
+      const response = await api.get("/admin/word_sets");
       setWordSets(response.data);
     } catch (error) {
       setError("단어장 생성에 실패했습니다.");
@@ -321,7 +321,7 @@ const WordSetViewer = () => {
 
   const handleManualUpdate = async () => {
     try {
-      await api.post("/admin/update_word_set");
+      await api.post("/admin/word_sets/update");
       window.location.reload();
     } catch (error) {
       console.error("Error updating word set:", error);
@@ -356,7 +356,7 @@ const WordSetViewer = () => {
 
   const handleViewCurrentWordSet = async () => {
     try {
-      const response = await api.get("/word_set/current");
+      const response = await api.get("/admin/word_sets/current");
       setSelectedWordSet(response.data);
       setOpenDialog(true);
     } catch (error) {

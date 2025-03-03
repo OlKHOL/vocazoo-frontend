@@ -38,7 +38,7 @@ const WrongAnswers = () => {
     const fetchData = async () => {
       try {
         const [wrongAnswersResponse, levelResponse] = await Promise.all([
-          api.get("/wrong_answers"),
+          api.get("/quiz/wrong_answers"),
           api.get("/user/level"),
         ]);
         setWrongAnswers(wrongAnswersResponse.data);
@@ -60,7 +60,7 @@ const WrongAnswers = () => {
         return;
       }
 
-      const response = await api.post("/start_test", {
+      const response = await api.post("/quiz/start", {
         word_set_id: "wrong_answers",
         words: wrongAnswers.map((wa) => ({
           english: wa.question,

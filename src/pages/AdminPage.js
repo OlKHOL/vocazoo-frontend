@@ -57,15 +57,10 @@ const AdminPage = () => {
   useEffect(() => {
     const checkAdmin = async () => {
       try {
-        const response = await api.get("/check_admin");
-        if (response.status === 200) {
-          setIsAdmin(response.data.is_admin);
-          if (response.data.is_admin) {
-            fetchWords(1);
-          }
-        } else {
-          setIsAdmin(false);
-          setError("관리자 권한 확인에 실패했습니다.");
+        const response = await api.get("/auth/check_admin");
+        setIsAdmin(response.data.is_admin);
+        if (response.data.is_admin) {
+          fetchWords(1);
         }
       } catch (error) {
         console.error("관리자 권한 확인 오류:", error);
@@ -96,8 +91,8 @@ const AdminPage = () => {
       setTotalPages(response.data.pages);
       setCurrentPage(response.data.current_page);
     } catch (error) {
-      console.error("단어 목록 가져오기 오류:", error);
-      setError("단어 목록을 가져오는 중 오류가 발생했습니다.");
+      console.error("단어 목록을 불러오는 중 오류가 발생했습니다:", error);
+      setError("단어 목록을 불러오는데 실패했습니다.");
     } finally {
       setIsLoading(false);
     }
@@ -116,14 +111,14 @@ const AdminPage = () => {
 
   // 단어 삭제
   const handleDeleteWord = async (wordId) => {
-    if (!window.confirm("정말로 이 단어를 삭제하시겠습니까?")) return;
-
-    try {
-      await api.delete(`/admin/words/${wordId}`);
-      fetchWords(currentPage);
-    } catch (error) {
-      console.error("단어 삭제 오류:", error);
-      setError("단어 삭제 중 오류가 발생했습니다.");
+    if (window.confirm("이 단어를 삭제하시겠습니까?")) {
+      try {
+        await api.delete(`/admin/words/${wordId}`);
+        fetchWords(currentPage);
+      } catch (error) {
+        console.error("단어 삭제 오류:", error);
+        setError("단어 삭제 중 오류가 발생했습니다.");
+      }
     }
   };
 
@@ -165,54 +160,51 @@ const AdminPage = () => {
   };
 
   // 파일 업로드 처리
-  const handleFileUpload = async (event) => {
-    event.preventDefault();
-    if (!isAdmin) {
-      setError("관리자 권한이 필요합니다.");
-      return;
-    }
-
+  const handleFileUpload = async () => {
     if (!file) {
       setError("파일을 선택해주세요.");
       return;
     }
 
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
+    if (!isAdmin) {
+      setError("관리자 권한이 필요합니다.");
+      return;
+    }
 
-      const response = await api.post("/admin/upload_words", formData, {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      setIsLoading(true);
+      const response = await api.post("/admin/words/upload", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
-
-      if (response.status === 200) {
-        setUploadResult(
-          `업로드 성공: ${response.data.added}개 추가, ${response.data.updated}개 수정됨`
-        );
-        fetchWords(currentPage);
-        setFile(null);
-        setTimeout(() => {
-          setShowUploadModal(false);
-        }, 2000);
-      }
+      setUploadResult(response.data.message);
+      fetchWords(currentPage);
+      setFile(null);
+      setTimeout(() => {
+        setShowUploadModal(false);
+      }, 2000);
     } catch (error) {
-      console.error("File upload error:", error);
+      console.error("파일 업로드 오류:", error);
       if (error.response?.status === 403) {
         setError("관리자 권한이 필요합니다.");
       } else {
         setError(
-          `업로드 오류: ${error.response?.data?.error || error.message}`
+          error.response?.data?.error || "파일 업로드 중 오류가 발생했습니다."
         );
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
   // 단어장 생성
   const handleCreateWordSet = async () => {
     try {
-      const response = await api.post("/admin/create_word_set");
+      const response = await api.post("/admin/word_sets");
       alert(`새 단어장이 생성되었습니다. ID: ${response.data.id}`);
     } catch (error) {
       console.error("단어장 생성 오류:", error);

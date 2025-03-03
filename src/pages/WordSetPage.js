@@ -19,7 +19,7 @@ const WordSetPage = () => {
   useEffect(() => {
     const fetchWordSets = async () => {
       try {
-        const response = await api.get("/get_word_sets");
+        const response = await api.get("/admin/word_sets");
         setWordSets(response.data);
       } catch (error) {
         console.error("Error fetching word sets:", error);
@@ -33,7 +33,7 @@ const WordSetPage = () => {
 
   const handleStartTest = async (wordSetId) => {
     try {
-      const response = await api.post("/start_test", {
+      const response = await api.post("/quiz/start", {
         word_set_id: wordSetId,
       });
       if (response.status === 200) {
