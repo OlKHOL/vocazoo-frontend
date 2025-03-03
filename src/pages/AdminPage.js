@@ -17,6 +17,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../utils/axiosConfig";
 import "../styles/AdminPage.css";
 import Navigationbar from "../components/Navigationbar";
+import axios from "axios";
 
 const AdminPage = () => {
   const navigate = useNavigate();
@@ -130,36 +131,48 @@ const AdminPage = () => {
   };
 
   // 파일 업로드 처리
-  const handleFileUpload = async (e) => {
-    e.preventDefault();
-    if (!file) {
-      setError("파일을 선택해주세요.");
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append("file", file);
-
+  const handleFileUpload = async (event) => {
     try {
-      const response = await api.post("/admin/upload_words", formData, {
+      const file = event.target.files[0];
+      if (!file) {
+        setUploadResult("파일을 선택해주세요.");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      console.log("Uploading file:", file.name);
+      console.log("FormData contents:", Array.from(formData.entries()));
+
+      const response = await axios.post("/admin/upload_words", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
+        validateStatus: function (status) {
+          return status < 500; // 500 미만의 상태 코드는 에러로 처리하지 않음
+        },
       });
-      setUploadResult(response.data);
-      fetchWords(1);
-    } catch (error) {
-      console.error("파일 업로드 오류:", error);
-      const errorMessage =
-        error.response?.data?.error || "파일 업로드 중 오류가 발생했습니다.";
-      setError(errorMessage);
-      // 디버깅을 위한 추가 로깅
-      if (error.response) {
-        console.log("Error response:", error.response);
-        console.log("Error data:", error.response.data);
-        console.log("Error status:", error.response.status);
-        console.log("Error headers:", error.response.headers);
+
+      console.log("Upload response:", response);
+
+      if (response.status === 200) {
+        setUploadResult(
+          `업로드 성공: ${response.data.added}개 추가, ${response.data.updated}개 수정됨`
+        );
+      } else {
+        setUploadResult(
+          `업로드 실패: ${
+            response.data.error || "알 수 없는 오류가 발생했습니다."
+          }`
+        );
       }
+    } catch (error) {
+      console.error("File upload error:", error);
+      console.error("Error response:", error.response);
+      setUploadResult(
+        `업로드 오류: ${error.response?.data?.error || error.message}`
+      );
     }
   };
 
@@ -410,9 +423,10 @@ const AdminPage = () => {
                 <Form.Control
                   type="file"
                   accept=".csv"
-                  onChange={(e) => setFile(e.target.files[0])}
+                  onChange={handleFileUpload}
                   id="csvFileUpload"
                   name="file"
+                  className="form-control"
                 />
                 <Form.Text className="text-muted">
                   CSV 파일은 english, korean, level 열을 포함해야 합니다.
@@ -425,12 +439,7 @@ const AdminPage = () => {
 
             {uploadResult && (
               <Alert variant="success" className="mt-3">
-                <p>업로드 결과:</p>
-                <ul>
-                  <li>추가된 단어: {uploadResult.added}</li>
-                  <li>업데이트된 단어: {uploadResult.updated}</li>
-                  <li>오류: {uploadResult.errors}</li>
-                </ul>
+                <p>{uploadResult}</p>
               </Alert>
             )}
           </Modal.Body>
