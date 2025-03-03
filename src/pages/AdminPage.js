@@ -150,9 +150,16 @@ const AdminPage = () => {
       fetchWords(1);
     } catch (error) {
       console.error("파일 업로드 오류:", error);
-      setError(
-        error.response?.data?.error || "파일 업로드 중 오류가 발생했습니다."
-      );
+      const errorMessage =
+        error.response?.data?.error || "파일 업로드 중 오류가 발생했습니다.";
+      setError(errorMessage);
+      // 디버깅을 위한 추가 로깅
+      if (error.response) {
+        console.log("Error response:", error.response);
+        console.log("Error data:", error.response.data);
+        console.log("Error status:", error.response.status);
+        console.log("Error headers:", error.response.headers);
+      }
     }
   };
 
@@ -404,6 +411,8 @@ const AdminPage = () => {
                   type="file"
                   accept=".csv"
                   onChange={(e) => setFile(e.target.files[0])}
+                  id="csvFileUpload"
+                  name="file"
                 />
                 <Form.Text className="text-muted">
                   CSV 파일은 english, korean, level 열을 포함해야 합니다.
