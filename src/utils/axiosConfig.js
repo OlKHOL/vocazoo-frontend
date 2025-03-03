@@ -54,7 +54,8 @@ instance.interceptors.response.use(
     // 401 에러 처리
     if (error.response?.status === 401) {
       localStorage.removeItem("token");
-      window.location.href = "/login";
+      // React Router의 navigate를 사용하기 위해 이벤트 발생
+      window.dispatchEvent(new CustomEvent("authError"));
       return Promise.reject(error);
     }
 
@@ -62,7 +63,8 @@ instance.interceptors.response.use(
     if (error.response?.status === 422) {
       console.error("Token verification failed:", error.response.data);
       localStorage.removeItem("token");
-      window.location.href = "/login";
+      // React Router의 navigate를 사용하기 위해 이벤트 발생
+      window.dispatchEvent(new CustomEvent("authError"));
       return Promise.reject(error);
     }
 

@@ -130,22 +130,30 @@ const AdminPage = () => {
     }
   };
 
+  // 파일 선택 처리
+  const handleFileSelect = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setFile(file);
+    }
+  };
+
   // 파일 업로드 처리
   const handleFileUpload = async (event) => {
-    try {
-      const file = event.target.files[0];
-      if (!file) {
-        setUploadResult("파일을 선택해주세요.");
-        return;
-      }
+    event.preventDefault();
+    if (!file) {
+      setUploadResult("파일을 선택해주세요.");
+      return;
+    }
 
+    try {
       const formData = new FormData();
       formData.append("file", file);
 
       console.log("Uploading file:", file.name);
       console.log("FormData contents:", Array.from(formData.entries()));
 
-      const response = await axios.post("/admin/upload_words", formData, {
+      const response = await api.post("/admin/upload_words", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -160,6 +168,8 @@ const AdminPage = () => {
         setUploadResult(
           `업로드 성공: ${response.data.added}개 추가, ${response.data.updated}개 수정됨`
         );
+        fetchWords(currentPage); // 단어 목록 새로고침
+        setFile(null); // 파일 초기화
       } else {
         setUploadResult(
           `업로드 실패: ${
@@ -412,7 +422,14 @@ const AdminPage = () => {
         )}
 
         {/* 파일 업로드 모달 */}
-        <Modal show={showUploadModal} onHide={() => setShowUploadModal(false)}>
+        <Modal
+          show={showUploadModal}
+          onHide={() => {
+            setShowUploadModal(false);
+            setFile(null);
+            setUploadResult(null);
+          }}
+        >
           <Modal.Header closeButton>
             <Modal.Title>CSV 파일 업로드</Modal.Title>
           </Modal.Header>
@@ -423,7 +440,7 @@ const AdminPage = () => {
                 <Form.Control
                   type="file"
                   accept=".csv"
-                  onChange={handleFileUpload}
+                  onChange={handleFileSelect}
                   id="csvFileUpload"
                   name="file"
                   className="form-control"
@@ -432,13 +449,16 @@ const AdminPage = () => {
                   CSV 파일은 english, korean, level 열을 포함해야 합니다.
                 </Form.Text>
               </Form.Group>
-              <Button variant="primary" type="submit">
+              <Button variant="primary" type="submit" disabled={!file}>
                 업로드
               </Button>
             </Form>
 
             {uploadResult && (
-              <Alert variant="success" className="mt-3">
+              <Alert
+                variant={uploadResult.includes("성공") ? "success" : "danger"}
+                className="mt-3"
+              >
                 <p>{uploadResult}</p>
               </Alert>
             )}
