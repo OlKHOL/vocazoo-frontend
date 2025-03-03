@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { Container, Box, Typography, Button } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 import LockIcon from "@mui/icons-material/Lock";
 import CurrentRank from "../components/CurrentRank";
 import LevelDisplay from "../components/LevelDisplay";
@@ -27,6 +27,7 @@ const Home = () => {
         console.error("Error fetching user level:", error);
       }
     };
+
     fetchUserLevel();
   }, []);
 
