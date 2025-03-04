@@ -19,7 +19,7 @@ const Home = () => {
   useEffect(() => {
     const fetchUserLevel = async () => {
       try {
-        const response = await api.get("/user/level");
+        const response = await api.get("/auth/account");
         const newLevel = response.data.level;
         setUserLevel(newLevel);
         localStorage.setItem("userLevel", newLevel.toString());
@@ -47,20 +47,7 @@ const Home = () => {
         overflow: "hidden",
       }}
     >
-      <Box
-        sx={{
-          position: "fixed",
-          top: "20px",
-          left: "20px",
-          zIndex: 1000,
-          display: "flex",
-          flexDirection: "column",
-          gap: 2,
-        }}
-      >
-        <LevelDisplay />
-        <CurrentRank />
-      </Box>
+      <LevelDisplay />
       <Container
         maxWidth="sm"
         sx={{
@@ -85,6 +72,10 @@ const Home = () => {
         >
           VOCAZOO
         </Typography>
+
+        <Box sx={{ width: "100%", mb: { xs: 4, sm: 5 } }}>
+          <CurrentRank />
+        </Box>
 
         <Box
           sx={{

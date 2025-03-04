@@ -1,227 +1,255 @@
 import React, { useState, useEffect } from "react";
-import { Box, Typography, Button } from "@mui/material";
+import { Box, Typography, Button, Container, Paper } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import api from "../utils/axiosConfig";
+import Navigationbar from "../components/Navigationbar";
 
 const LEVEL_EXP_TABLE = {
-  "1-10": 30,
-  "11-20": 60,
-  "21-30": 90,
-  "31-40": 150,
-  "41-50": 250,
-  "51-60": 400,
-  "61-70": 600,
-  "71-80": 900,
-  "81-90": 1300,
-  "91-100": 1800,
+  1: { min: 0, max: 100, description: "초보자" },
+  2: { min: 100, max: 300, description: "학습자" },
+  3: { min: 300, max: 600, description: "중급자" },
+  4: { min: 600, max: 1000, description: "상급자" },
+  5: { min: 1000, max: Infinity, description: "마스터" },
 };
 
 const getExpForLevel = (level) => {
-  for (const [range, exp] of Object.entries(LEVEL_EXP_TABLE)) {
-    const [start, end] = range.split("-").map(Number);
-    if (level >= start && level <= end) {
-      return exp;
-    }
-  }
-  return 1800;
+  return LEVEL_EXP_TABLE[level] || { min: 0, max: 100, description: "초보자" };
 };
 
 const LevelPage = () => {
   const [levelInfo, setLevelInfo] = useState(null);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchLevelInfo = async () => {
       try {
-        const response = await api.get("/user/level");
-        setLevelInfo(response.data);
-
-        // Scroll to current level after data is loaded
-        setTimeout(() => {
-          const currentLevelElement = document.querySelector(
-            `[data-level="${response.data.level}"]`
-          );
-          if (currentLevelElement) {
-            currentLevelElement.scrollIntoView({
-              behavior: "smooth",
-              block: "center",
-            });
-          }
-        }, 100);
+        const response = await api.get("/auth/account");
+        if (response.data) {
+          setLevelInfo({
+            level: response.data.level || 1,
+            current_exp: response.data.current_exp || 0,
+            required_exp: response.data.required_exp || 100,
+          });
+        }
       } catch (error) {
         console.error("Failed to fetch level info:", error);
+        setError("레벨 정보를 불러오는데 실패했습니다.");
       }
     };
 
     fetchLevelInfo();
   }, []);
 
-  const renderLevelNodes = () => {
-    if (!levelInfo) return null;
+  if (error) {
+    return (
+      <Box
+        sx={{
+          background: "#1E2A3A",
+          minHeight: "100vh",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          color: "#FF4444",
+        }}
+      >
+        {error}
+      </Box>
+    );
+  }
 
-    const currentLevel = levelInfo.level;
-    const nodes = [];
-    const maxLevel = 100;
+  if (!levelInfo) return null;
 
-    for (let level = maxLevel; level >= 1; level--) {
-      const expRequired = getExpForLevel(level);
-      const isLocked = level > currentLevel + 1;
-      const isMilestone = level % 10 === 0;
-
-      nodes.push(
-        <Box
-          key={level}
-          data-level={level}
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexDirection: "column",
-            position: "relative",
-            mb: { xs: 2, sm: 3 },
-            opacity: isLocked ? 0.5 : 1,
-            transition: "all 0.3s ease",
-            "&:after": {
-              content: '""',
-              position: "absolute",
-              width: "2px",
-              height: { xs: "40px", sm: "60px" },
-              backgroundColor: isLocked ? "rgba(42, 55, 68, 0.5)" : "#00E5FF",
-              bottom: { xs: "-40px", sm: "-60px" },
-              opacity: 0.6,
-              display: level === 1 ? "none" : "block",
-            },
-          }}
-        >
-          <Box
-            sx={{
-              width: { xs: "100px", sm: "120px" },
-              height: { xs: "100px", sm: "120px" },
-              borderRadius: isMilestone ? "20px" : "50%",
-              background: isMilestone
-                ? "linear-gradient(135deg, #2A3744 0%, #1E2A3A 100%)"
-                : "linear-gradient(135deg, #FFD700 0%, #FFA500 100%)",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              position: "relative",
-              transform: `perspective(1000px) rotateX(20deg)`,
-              transformStyle: "preserve-3d",
-              boxShadow:
-                level === currentLevel
-                  ? "0 10px 20px rgba(0,229,255,0.3)"
-                  : "0 5px 15px rgba(0,0,0,0.3)",
-              border: isMilestone
-                ? "4px solid #00E5FF"
-                : "2px solid rgba(255,255,255,0.1)",
-              "&:before": isMilestone
-                ? {
-                    content: '""',
-                    position: "absolute",
-                    top: "-10px",
-                    left: "50%",
-                    transform: "translateX(-50%)",
-                    width: "40px",
-                    height: "20px",
-                    background: "#00E5FF",
-                    clipPath: "polygon(50% 0%, 0% 100%, 100% 100%)",
-                  }
-                : {},
-              "&:hover": {
-                transform: `perspective(1000px) rotateX(25deg) translateY(-5px)`,
-              },
-            }}
-          >
-            <Typography
-              sx={{
-                fontSize: { xs: "1.5rem", sm: "2rem" },
-                fontWeight: "bold",
-                color: isMilestone ? "#FFFFFF" : "#1E2A3A",
-                textShadow: isMilestone
-                  ? "0 0 10px rgba(0,229,255,0.5)"
-                  : "none",
-              }}
-            >
-              {level}
-            </Typography>
-            {!isLocked && (
-              <Typography
-                sx={{
-                  fontSize: { xs: "0.7rem", sm: "0.8rem" },
-                  color: isMilestone ? "#FFFFFF" : "#1E2A3A",
-                  opacity: 0.8,
-                }}
-              >
-                {expRequired} EXP
-              </Typography>
-            )}
-          </Box>
-        </Box>
-      );
-    }
-
-    return nodes;
-  };
+  const currentLevelExp = getExpForLevel(levelInfo.level);
+  const nextLevelExp = getExpForLevel(levelInfo.level + 1);
+  const progress =
+    levelInfo.level >= 100
+      ? 100
+      : ((levelInfo.current_exp - currentLevelExp.min) /
+          (currentLevelExp.max - currentLevelExp.min)) *
+        100;
 
   return (
     <Box
       sx={{
+        background: "#1E2A3A",
         minHeight: "100vh",
-        backgroundColor: "#1E2A3A",
-        padding: { xs: 2, sm: 3 },
-        overflowY: "auto",
-        scrollBehavior: "smooth",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        position: "relative",
       }}
     >
-      <Button
-        onClick={() => navigate("/")}
-        sx={{
-          position: "fixed",
-          top: { xs: "15px", sm: "20px" },
-          left: { xs: "15px", sm: "20px" },
-          color: "#FFFFFF",
-          fontSize: { xs: "0.9rem", sm: "1rem" },
-          textTransform: "none",
-          zIndex: 1100,
-          backgroundColor: "rgba(30, 42, 58, 0.8)",
-          backdropFilter: "blur(8px)",
-          padding: "8px 16px",
-          borderRadius: "8px",
-          "&:hover": {
-            backgroundColor: "rgba(255,255,255,0.1)",
-          },
-        }}
-      >
-        ← Back to Home
-      </Button>
+      <Container maxWidth="sm" sx={{ py: 4 }}>
+        <Typography
+          variant="h4"
+          sx={{
+            color: "#FFFFFF",
+            fontWeight: "bold",
+            textAlign: "center",
+            mb: 4,
+          }}
+        >
+          레벨 여정
+        </Typography>
 
-      <Typography
-        variant="h4"
-        sx={{
-          color: "#FFFFFF",
-          fontWeight: "bold",
-          fontSize: { xs: "2rem", sm: "2.5rem" },
-          textAlign: "center",
-          mt: { xs: 6, sm: 8 },
-          mb: { xs: 4, sm: 6 },
-        }}
-      >
-        Level Journey
-      </Typography>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 2,
+            mb: 4,
+          }}
+        >
+          {Object.entries(LEVEL_EXP_TABLE).map(([level, info]) => {
+            const isCurrentLevel = parseInt(level) === levelInfo.level;
+            const isLocked = parseInt(level) > levelInfo.level;
+            const isCompleted = parseInt(level) < levelInfo.level;
 
-      <Box
-        sx={{
-          maxWidth: "600px",
-          margin: "0 auto",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          pb: 10,
-        }}
-      >
-        {renderLevelNodes()}
-      </Box>
+            return (
+              <Box
+                key={level}
+                sx={{
+                  backgroundColor: isCurrentLevel
+                    ? "rgba(155, 135, 245, 0.1)"
+                    : isLocked
+                    ? "rgba(255, 255, 255, 0.05)"
+                    : "rgba(0, 229, 255, 0.1)",
+                  borderRadius: "12px",
+                  p: 2,
+                  position: "relative",
+                  opacity: isLocked ? 0.5 : 1,
+                  transition: "all 0.2s ease",
+                  "&:hover": {
+                    transform: isLocked ? "none" : "translateX(10px)",
+                  },
+                }}
+              >
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      color: "#FFFFFF",
+                      fontSize: "1.2rem",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {info.description}
+                  </Typography>
+                  <Typography
+                    sx={{
+                      color: isCurrentLevel
+                        ? "#9b87f5"
+                        : isLocked
+                        ? "#FFFFFF"
+                        : "#00E5FF",
+                      fontSize: "1.1rem",
+                    }}
+                  >
+                    Lv.{level}
+                  </Typography>
+                </Box>
+                <Typography
+                  sx={{
+                    color: "#FFFFFF",
+                    opacity: 0.7,
+                    fontSize: "0.9rem",
+                    mt: 1,
+                  }}
+                >
+                  {info.min} ~ {info.max} EXP
+                </Typography>
+                {isCurrentLevel && (
+                  <Box
+                    sx={{
+                      mt: 2,
+                      backgroundColor: "rgba(255, 255, 255, 0.1)",
+                      height: 8,
+                      borderRadius: 4,
+                      overflow: "hidden",
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        width: `${progress}%`,
+                        height: "100%",
+                        backgroundColor: "#00E5FF",
+                        borderRadius: 4,
+                        transition: "width 0.3s ease",
+                      }}
+                    />
+                  </Box>
+                )}
+              </Box>
+            );
+          })}
+        </Box>
+
+        <Paper
+          sx={{
+            p: 3,
+            backgroundColor: "rgba(30, 42, 58, 0.8)",
+            backdropFilter: "blur(8px)",
+            borderRadius: "12px",
+            mb: 4,
+          }}
+        >
+          <Typography
+            sx={{
+              color: "#FFFFFF",
+              fontSize: "1.1rem",
+              mb: 2,
+            }}
+          >
+            현재 레벨: {levelInfo.level}
+          </Typography>
+          <Typography
+            sx={{
+              color: "#FFFFFF",
+              fontSize: "1.1rem",
+              mb: 2,
+            }}
+          >
+            현재 경험치: {levelInfo.current_exp}
+          </Typography>
+          <Typography
+            sx={{
+              color: "#FFFFFF",
+              fontSize: "1.1rem",
+            }}
+          >
+            다음 레벨까지: {currentLevelExp.max - levelInfo.current_exp} EXP
+          </Typography>
+        </Paper>
+
+        <Button
+          variant="contained"
+          onClick={() => navigate("/wordset")}
+          sx={{
+            backgroundColor: "#9b87f5",
+            color: "#FFFFFF",
+            padding: "12px 24px",
+            fontSize: "1.1rem",
+            fontWeight: "700",
+            borderRadius: "12px",
+            textTransform: "none",
+            width: "100%",
+            boxShadow: "0px 4px 10px rgba(155, 135, 245, 0.2)",
+            "&:hover": {
+              backgroundColor: "rgba(155, 135, 245, 0.9)",
+            },
+          }}
+        >
+          단어 학습하기
+        </Button>
+      </Container>
+      <Navigationbar />
     </Box>
   );
 };

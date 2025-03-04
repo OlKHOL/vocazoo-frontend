@@ -1,122 +1,123 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import {
   BrowserRouter as Router,
-  Route,
   Routes,
+  Route,
   Navigate,
 } from "react-router-dom";
 import Home from "./pages/Home";
-import Quiz from "./Quiz";
 import Login from "./components/Login";
 import Register from "./components/Register";
-import TestHistory from "./TestHistory";
-import WordSetViewer from "./components/WordSetViewer";
-import ProtectedRoute from "./components/ProtectedRoute";
-import WordSetPage from "./pages/WordSetPage";
+import Quiz from "./Quiz";
 import WrongAnswers from "./pages/WrongAnswers";
-import AccountPage from "./pages/AccountPage";
-import { createTheme, ThemeProvider } from "@mui/material/styles";
-import RankingPage from "./pages/RankingPage";
+import WordSetPage from "./pages/WordSetPage";
 import LevelPage from "./pages/LevelPage";
+import Rankings from "./pages/RankingPage";
 import AdminPage from "./pages/AdminPage";
+import Navigationbar from "./components/Navigationbar";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import "./App.css";
 
-const theme = createTheme({
-  typography: {
-    fontFamily: "Inter, sans-serif",
-    allVariants: {
-      fontFamily: "Inter, sans-serif",
-    },
-  },
-});
+const PrivateRoute = ({ children }) => {
+  const { isAuthenticated, isLoading } = useAuth();
+  const isDevelopment = process.env.NODE_ENV === "development";
 
-function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    setIsLoggedIn(!!token);
-  }, []);
+  if (isDevelopment) {
+    return children;
+  }
 
+  return isAuthenticated ? children : <Navigate to="/login" />;
+};
+
+const AdminRoute = ({ children }) => {
+  const { isAuthenticated, isAdmin, isLoading } = useAuth();
+  const isDevelopment = process.env.NODE_ENV === "development";
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (isDevelopment) {
+    return children;
+  }
+
+  return isAuthenticated && isAdmin ? children : <Navigate to="/" />;
+};
+
+const App = () => {
   return (
-    <ThemeProvider theme={theme}>
+    <AuthProvider>
       <Router>
-        <Routes>
-          {/* 공개 라우트 */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-
-          {/* 보호된 라우트 */}
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <Home />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/wordset"
-            element={
-              <ProtectedRoute>
-                <WordSetViewer />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/quiz"
-            element={
-              <ProtectedRoute>
-                <Quiz />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/wrong-answers"
-            element={
-              <ProtectedRoute>
-                <WrongAnswers />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/account"
-            element={
-              <ProtectedRoute>
-                <AccountPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/rankings"
-            element={
-              <ProtectedRoute>
-                <RankingPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/level"
-            element={
-              <ProtectedRoute>
-                <LevelPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin"
-            element={
-              <ProtectedRoute>
-                <AdminPage />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* 알 수 없는 경로는 홈으로 리다이렉트 */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <div className="app">
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route
+              path="/"
+              element={
+                <PrivateRoute>
+                  <Home />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/quiz"
+              element={
+                <PrivateRoute>
+                  <Quiz />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/wrong-answers"
+              element={
+                <PrivateRoute>
+                  <WrongAnswers />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/wordset"
+              element={
+                <PrivateRoute>
+                  <WordSetPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/level"
+              element={
+                <PrivateRoute>
+                  <LevelPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/rankings"
+              element={
+                <PrivateRoute>
+                  <Rankings />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                <AdminRoute>
+                  <AdminPage />
+                </AdminRoute>
+              }
+            />
+          </Routes>
+          <Navigationbar />
+        </div>
       </Router>
-    </ThemeProvider>
+    </AuthProvider>
   );
-}
+};
 
 export default App;
