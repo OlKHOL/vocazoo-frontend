@@ -8,9 +8,10 @@ console.log("Current environment:", process.env.NODE_ENV);
 
 const instance = axios.create({
   baseURL,
-  withCredentials: false,
+  withCredentials: true,
   headers: {
     "Content-Type": "application/json",
+    Accept: "application/json",
   },
 });
 
@@ -21,6 +22,8 @@ instance.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    // CORS preflight 요청을 위한 설정
+    config.headers["Access-Control-Allow-Origin"] = "*";
     return config;
   },
   (error) => {

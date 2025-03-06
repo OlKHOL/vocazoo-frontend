@@ -12,14 +12,6 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        if (isDevelopment) {
-          // 개발 모드에서는 자동으로 인증된 상태로 설정
-          setIsAuthenticated(true);
-          setIsAdmin(true);
-          setIsLoading(false);
-          return;
-        }
-
         const token = localStorage.getItem("token");
         if (!token) {
           setIsAuthenticated(false);
@@ -35,13 +27,14 @@ export const AuthProvider = ({ children }) => {
         console.error("Auth check failed:", error);
         setIsAuthenticated(false);
         setIsAdmin(false);
+        localStorage.removeItem("token");
       } finally {
         setIsLoading(false);
       }
     };
 
     checkAuth();
-  }, [isDevelopment]);
+  }, []);
 
   const login = async (username, password) => {
     try {
