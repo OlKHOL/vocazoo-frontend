@@ -13,7 +13,6 @@ import WrongAnswers from "./pages/WrongAnswers";
 import WordSetPage from "./pages/WordSetPage";
 import LevelPage from "./pages/LevelPage";
 import Rankings from "./pages/RankingPage";
-import AdminPage from "./pages/AdminPage";
 import Navigationbar from "./components/Navigationbar";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import "./App.css";
@@ -31,21 +30,6 @@ const PrivateRoute = ({ children }) => {
   }
 
   return isAuthenticated ? children : <Navigate to="/login" />;
-};
-
-const AdminRoute = ({ children }) => {
-  const { isAuthenticated, isAdmin, isLoading } = useAuth();
-  const isDevelopment = process.env.NODE_ENV === "development";
-
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-
-  if (isDevelopment) {
-    return children;
-  }
-
-  return isAuthenticated && isAdmin ? children : <Navigate to="/" />;
 };
 
 const App = () => {
@@ -102,14 +86,6 @@ const App = () => {
                 <PrivateRoute>
                   <Rankings />
                 </PrivateRoute>
-              }
-            />
-            <Route
-              path="/admin"
-              element={
-                <AdminRoute>
-                  <AdminPage />
-                </AdminRoute>
               }
             />
           </Routes>
