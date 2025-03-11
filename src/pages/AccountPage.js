@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Box,
@@ -16,23 +16,49 @@ const AccountPage = () => {
   const [error, setError] = useState(null);
   const [userData, setUserData] = useState(null);
   const navigate = useNavigate();
+  const mounted = useRef(false);
 
   useEffect(() => {
+    mounted.current = true;
+
     const fetchData = async () => {
       try {
+        console.log("Fetching account data...");
         const response = await api.get("/auth/account");
-        console.log("Account API Response:", response);
-        setUserData(response.data);
+        
+        if (mounted.current) {
+          console.log("Account data received:", response.data);
+          setUserData(response.data);
+          setError(null);
+        }
       } catch (err) {
-        console.error("Account API Error:", err);
-        setError(err.message);
+        console.error("Failed to fetch account data:", err.message);
+        if (mounted.current) {
+          setError(err.response?.data?.message || err.message || "서버에서 응답이 없습니다.");
+          if (err.response?.status === 401) {
+            navigate("/login");
+          }
+        }
       } finally {
-        setLoading(false);
+        if (mounted.current) {
+          setLoading(false);
+        }
       }
     };
 
+    const token = localStorage.getItem("token");
+    if (!token) {
+      console.log("No token found, redirecting to login");
+      navigate("/login");
+      return;
+    }
+
     fetchData();
-  }, []);
+
+    return () => {
+      mounted.current = false;
+    };
+  }, [navigate]);
 
   if (loading) {
     return (

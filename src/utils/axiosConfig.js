@@ -11,6 +11,8 @@ const instance = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
+  withCredentials: true,
+  timeout: 10000,
 });
 
 // 요청 인터셉터 추가
@@ -23,25 +25,28 @@ instance.interceptors.request.use(
     return config;
   },
   (error) => {
-    console.error("Request error:", error);
+    console.error("[Request Error]", error);
     return Promise.reject(error);
   }
 );
 
 // 응답 인터셉터 추가
 instance.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log("[API Response]", response.config.url, response.data);
+    return response;
+  },
   (error) => {
-    console.error("Response error:", error);
+    console.error("[Response Error]", error.config?.url, error.message);
+    
     if (error.response?.status === 401) {
+      console.log("Unauthorized access, removing token");
       localStorage.removeItem("token");
       window.dispatchEvent(new CustomEvent("authError"));
     }
+    
     return Promise.reject(error);
   }
 );
-
-// 전역 타임아웃 설정
-instance.defaults.timeout = 10000;
 
 export default instance;
