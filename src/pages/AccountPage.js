@@ -38,12 +38,17 @@ const AccountPage = () => {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
+        console.log("Fetching user data...");
         const response = await api.get("/auth/account");
+        console.log("User data response:", response.data);
         setUserData(response.data);
         setNewUsername(response.data.username);
       } catch (error) {
-        setError("Error fetching user data: " + error.message);
+        console.error("Error fetching user data:", error);
+        const errorMessage = error.response?.data?.message || error.message || "사용자 정보를 불러오는데 실패했습니다.";
+        setError(errorMessage);
         if (error.response?.status === 401) {
+          localStorage.removeItem("token");
           navigate("/login");
         }
       } finally {
@@ -55,13 +60,15 @@ const AccountPage = () => {
   }, [navigate]);
 
   const handleUpdateUsername = async () => {
-    playFeedback();
     try {
+      playFeedback();
       await api.post("/auth/username", { username: newUsername });
       setUserData((prev) => ({ ...prev, username: newUsername }));
       setOpenDialog(false);
     } catch (error) {
-      setError("Error updating username: " + error.message);
+      console.error("Error updating username:", error);
+      const errorMessage = error.response?.data?.message || error.message || "사용자명 변경에 실패했습니다.";
+      setError(errorMessage);
     }
   };
 
@@ -71,8 +78,7 @@ const AccountPage = () => {
     navigate("/login");
   };
 
-  if (error) return <Typography color="error">{error}</Typography>;
-  if (loading)
+  if (loading) {
     return (
       <Box
         sx={{
@@ -81,11 +87,46 @@ const AccountPage = () => {
           alignItems: "center",
           minHeight: "100vh",
           background: "#1E2A3A",
+          flexDirection: "column",
+          gap: 2,
         }}
       >
-        <CircularProgress />
+        <CircularProgress sx={{ color: "#9b87f5" }} />
+        <Typography sx={{ color: "#FFFFFF" }}>로딩 중...</Typography>
       </Box>
     );
+  }
+
+  if (error) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "100vh",
+          background: "#1E2A3A",
+          flexDirection: "column",
+          gap: 2,
+          p: 3,
+        }}
+      >
+        <Typography color="error" align="center" sx={{ color: "#FF6B6B" }}>
+          {error}
+        </Typography>
+        <Button
+          variant="contained"
+          onClick={() => navigate("/login")}
+          sx={{
+            backgroundColor: "#9b87f5",
+            "&:hover": { backgroundColor: "#8a74f8" },
+          }}
+        >
+          로그인 페이지로 이동
+        </Button>
+      </Box>
+    );
+  }
 
   const { username = "사용자", stats = {}, createdAt } = userData || {};
   const { currentScore = 0, totalTests = 0, averageScore = 0 } = stats;
