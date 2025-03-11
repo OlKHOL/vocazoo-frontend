@@ -11,10 +11,12 @@ import {
   LinearProgress,
 } from "@mui/material";
 import { useAuth } from "../contexts/AuthContext";
+import api from "../utils/axiosConfig";
 
 const AccountPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [accountData, setAccountData] = useState(null);
   const navigate = useNavigate();
   const { userData, logout, checkAuth, isAuthenticated } = useAuth();
   const [levelProgress, setLevelProgress] = useState(0);
@@ -22,24 +24,34 @@ const AccountPage = () => {
   useEffect(() => {
     const loadUserData = async () => {
       try {
+        console.log("[AccountPage] Starting to load user data...");
         if (!localStorage.getItem("token")) {
-          console.log("No token found, redirecting to login");
+          console.log("[AccountPage] No token found, redirecting to login");
           navigate("/login");
           return;
         }
 
-        console.log("Checking authentication and refreshing user data...");
+        console.log("[AccountPage] Checking authentication and refreshing user data...");
         await checkAuth();
-        setError(null);
+
+        // Fetch additional account information
+        console.log("[AccountPage] Fetching account information...");
+        const response = await api.get("/account/info");
+        console.log("[AccountPage] Account data received:", response.data);
+        setAccountData(response.data);
 
         // Calculate level progress
-        const totalExpForLevel = Math.pow(userData?.level * 2, 2) * 100;
-        const progress = (userData?.exp / totalExpForLevel) * 100;
+        const totalExpForLevel = Math.pow(response.data.level * 2, 2) * 100;
+        const progress = (response.data.exp / totalExpForLevel) * 100;
+        console.log("[AccountPage] Level progress calculated:", progress);
         setLevelProgress(progress);
+
+        setError(null);
       } catch (err) {
-        console.error("Failed to fetch account data:", err);
+        console.error("[AccountPage] Error loading account data:", err);
         setError(err.response?.data?.message || err.message || "서버에서 응답이 없습니다.");
         if (err.response?.status === 401) {
+          console.log("[AccountPage] Unauthorized, redirecting to login");
           navigate("/login");
         }
       } finally {
@@ -48,15 +60,17 @@ const AccountPage = () => {
     };
 
     loadUserData();
-  }, [navigate, checkAuth, userData?.level, userData?.exp]);
+  }, [navigate, checkAuth]);
 
   useEffect(() => {
     if (!isAuthenticated && !loading) {
+      console.log("[AccountPage] User not authenticated, redirecting to login");
       navigate("/login");
     }
   }, [isAuthenticated, loading, navigate]);
 
   const handleLogout = () => {
+    console.log("[AccountPage] Logging out...");
     logout();
     navigate("/login");
   };
@@ -104,7 +118,7 @@ const AccountPage = () => {
     );
   }
 
-  if (!userData) {
+  if (!accountData) {
     return (
       <Box
         sx={{
@@ -148,7 +162,7 @@ const AccountPage = () => {
                 mb: 3,
               }}
             >
-              {userData.username ? userData.username.charAt(0).toUpperCase() : "?"}
+              {accountData.username ? accountData.username.charAt(0).toUpperCase() : "?"}
             </Avatar>
             
             <Typography
@@ -160,7 +174,7 @@ const AccountPage = () => {
                 textAlign: "center",
               }}
             >
-              {userData.username || "사용자"}
+              {accountData.username || "사용자"}
             </Typography>
 
             <Box sx={{ width: "100%", mb: 4 }}>
@@ -172,7 +186,7 @@ const AccountPage = () => {
                   textAlign: "center",
                 }}
               >
-                레벨 {userData.level || 1}
+                레벨 {accountData.level || 1}
               </Typography>
               
               <Box sx={{ width: "100%", mb: 2 }}>
@@ -197,7 +211,7 @@ const AccountPage = () => {
                     textAlign: "center",
                   }}
                 >
-                  {userData.exp || 0} EXP
+                  {accountData.exp || 0} EXP
                 </Typography>
               </Box>
               
@@ -210,14 +224,14 @@ const AccountPage = () => {
                 }}
               >
                 <Typography sx={{ color: "#FFFFFF", mb: 1 }}>
-                  현재 점수: {userData.current_score || 0}점
+                  현재 점수: {accountData.current_score || 0}점
                 </Typography>
                 <Typography sx={{ color: "#FFFFFF", mb: 1 }}>
-                  완료한 테스트: {userData.completed_tests || 0}회
+                  완료한 테스트: {accountData.completed_tests || 0}회
                 </Typography>
               </Box>
 
-              {userData.badges && userData.badges.length > 0 && (
+              {accountData.badges && accountData.badges.length > 0 && (
                 <Box
                   sx={{
                     backgroundColor: "rgba(155, 135, 245, 0.1)",
@@ -241,7 +255,7 @@ const AccountPage = () => {
                       gap: 1,
                     }}
                   >
-                    {userData.badges.map((badge, index) => (
+                    {accountData.badges.map((badge, index) => (
                       <Box
                         key={index}
                         sx={{
