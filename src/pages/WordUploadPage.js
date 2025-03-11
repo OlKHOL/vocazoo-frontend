@@ -22,8 +22,8 @@ const WordUploadPage = () => {
 
   const handleFileChange = (event) => {
     const selectedFile = event.target.files[0];
-    if (selectedFile && !selectedFile.name.endsWith('.csv')) {
-      setError('CSV 파일만 업로드 가능합니다.');
+    if (selectedFile && !selectedFile.name.endsWith('.csv') && !selectedFile.name.endsWith('.txt')) {
+      setError('CSV 또는 TXT 파일만 업로드 가능합니다.');
       return;
     }
     setFile(selectedFile);
@@ -80,7 +80,7 @@ const WordUploadPage = () => {
 
           <Box sx={{ mb: 3 }}>
             <Typography sx={{ color: '#FFFFFF', mb: 1 }}>
-              CSV 파일 형식:
+              파일 형식 (CSV 또는 TXT):
             </Typography>
             <Typography
               sx={{ color: '#9b87f5', fontSize: '0.9rem', fontFamily: 'monospace' }}
@@ -97,10 +97,13 @@ const WordUploadPage = () => {
             >
               banana,바나나
             </Typography>
+            <Typography sx={{ color: '#FFFFFF', mt: 1, fontSize: '0.9rem' }}>
+              * 큰따옴표(") 사용 가능
+            </Typography>
           </Box>
 
           <input
-            accept=".csv"
+            accept=".csv,.txt"
             style={{ display: 'none' }}
             id="file-upload"
             type="file"
