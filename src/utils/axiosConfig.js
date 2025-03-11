@@ -11,7 +11,11 @@ const instance = axios.create({
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
+    "Accept": "application/json",
   },
+  // CORS 관련 설정
+  xsrfCookieName: "XSRF-TOKEN",
+  xsrfHeaderName: "X-XSRF-TOKEN",
 });
 
 // 요청 인터셉터 추가
@@ -21,9 +25,15 @@ instance.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    // CORS preflight 요청 최적화
+    if (config.method === "options") {
+      config.headers["Access-Control-Request-Method"] = "GET, POST, PUT, DELETE";
+      config.headers["Access-Control-Request-Headers"] = "Authorization, Content-Type";
+    }
     return config;
   },
   (error) => {
+    console.error("Request error:", error);
     return Promise.reject(error);
   }
 );
@@ -32,6 +42,7 @@ instance.interceptors.request.use(
 instance.interceptors.response.use(
   (response) => response,
   (error) => {
+    console.error("Response error:", error);
     if (error.response?.status === 401) {
       localStorage.removeItem("token");
       window.dispatchEvent(new CustomEvent("authError"));
@@ -39,5 +50,8 @@ instance.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// 전역 타임아웃 설정
+instance.defaults.timeout = 10000;
 
 export default instance;

@@ -19,15 +19,7 @@ import { useButtonFeedback } from "../hooks/useButtonFeedback";
 import api from "../utils/axiosConfig";
 
 const AccountPage = () => {
-  const [userData, setUserData] = useState({
-    username: "",
-    stats: {
-      currentScore: 0,
-      totalTests: 0,
-      averageScore: 0,
-    },
-    createdAt: new Date().toISOString(),
-  });
+  const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [openDialog, setOpenDialog] = useState(false);
@@ -36,35 +28,53 @@ const AccountPage = () => {
   const playFeedback = useButtonFeedback();
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchUserData = async () => {
       try {
         console.log("Fetching user data...");
         const response = await api.get("/auth/account");
         console.log("User data response:", response.data);
-        setUserData(response.data);
-        setNewUsername(response.data.username);
+        
+        if (isMounted) {
+          if (!response.data) {
+            throw new Error("서버에서 데이터를 받지 못했습니다.");
+          }
+          setUserData(response.data);
+          setNewUsername(response.data.username || "");
+        }
       } catch (error) {
         console.error("Error fetching user data:", error);
-        const errorMessage = error.response?.data?.message || error.message || "사용자 정보를 불러오는데 실패했습니다.";
-        setError(errorMessage);
-        if (error.response?.status === 401) {
-          localStorage.removeItem("token");
-          navigate("/login");
+        if (isMounted) {
+          const errorMessage = error.response?.data?.message || error.message || "사용자 정보를 불러오는데 실패했습니다.";
+          setError(errorMessage);
+          if (error.response?.status === 401) {
+            localStorage.removeItem("token");
+            navigate("/login");
+          }
         }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchUserData();
+
+    return () => {
+      isMounted = false;
+    };
   }, [navigate]);
 
   const handleUpdateUsername = async () => {
     try {
       playFeedback();
-      await api.post("/auth/username", { username: newUsername });
-      setUserData((prev) => ({ ...prev, username: newUsername }));
-      setOpenDialog(false);
+      const response = await api.post("/auth/username", { username: newUsername });
+      if (response.data) {
+        setUserData((prev) => ({ ...prev, username: newUsername }));
+        setOpenDialog(false);
+      }
     } catch (error) {
       console.error("Error updating username:", error);
       const errorMessage = error.response?.data?.message || error.message || "사용자명 변경에 실패했습니다.";
@@ -128,8 +138,37 @@ const AccountPage = () => {
     );
   }
 
-  const { username = "사용자", stats = {}, createdAt } = userData || {};
-  const { currentScore = 0, totalTests = 0, averageScore = 0 } = stats;
+  if (!userData) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "100vh",
+          background: "#1E2A3A",
+          flexDirection: "column",
+          gap: 2,
+        }}
+      >
+        <Typography sx={{ color: "#FFFFFF" }}>
+          사용자 정보를 불러올 수 없습니다.
+        </Typography>
+        <Button
+          variant="contained"
+          onClick={() => window.location.reload()}
+          sx={{
+            backgroundColor: "#9b87f5",
+            "&:hover": { backgroundColor: "#8a74f8" },
+          }}
+        >
+          새로고침
+        </Button>
+      </Box>
+    );
+  }
+
+  const { username = "사용자", level = 1, exp = 0, current_score = 0 } = userData;
 
   return (
     <Box sx={{ minHeight: "100vh", background: "#1E2A3A", pb: 8 }}>
@@ -200,7 +239,7 @@ const AccountPage = () => {
                   mb: 2,
                 }}
               >
-                가입일: {new Date(createdAt).toLocaleDateString()}
+                레벨: {level}
               </Typography>
             </Box>
 
@@ -211,28 +250,20 @@ const AccountPage = () => {
                 sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}
               >
                 <Typography sx={{ color: "#FFFFFF", opacity: 0.7 }}>
-                  현재 점수
+                  현재 경험치
                 </Typography>
                 <Typography sx={{ color: "#FFFFFF", fontWeight: "bold" }}>
-                  {currentScore.toFixed(2)}
+                  {exp}
                 </Typography>
               </Box>
               <Box
                 sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}
               >
                 <Typography sx={{ color: "#FFFFFF", opacity: 0.7 }}>
-                  평균 점수
+                  현재 점수
                 </Typography>
                 <Typography sx={{ color: "#FFFFFF", fontWeight: "bold" }}>
-                  {averageScore.toFixed(2)}
-                </Typography>
-              </Box>
-              <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                <Typography sx={{ color: "#FFFFFF", opacity: 0.7 }}>
-                  총 테스트
-                </Typography>
-                <Typography sx={{ color: "#FFFFFF", fontWeight: "bold" }}>
-                  {totalTests}회
+                  {current_score}
                 </Typography>
               </Box>
             </Box>
