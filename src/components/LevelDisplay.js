@@ -15,13 +15,19 @@ const LevelDisplay = () => {
         if (response.data) {
           setLevelInfo({
             level: response.data.level || 1,
-            current_exp: response.data.current_exp || 0,
-            required_exp: response.data.required_exp || 100,
+            current_exp: response.data.exp || 0,
+            required_exp: 100  // 기본값 설정
           });
         }
       } catch (error) {
         console.error("Failed to fetch level info:", error);
         setError("레벨 정보를 불러오는데 실패했습니다.");
+        // 에러 발생 시 기본값 설정
+        setLevelInfo({
+          level: 1,
+          current_exp: 0,
+          required_exp: 100
+        });
       }
     };
 

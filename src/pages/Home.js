@@ -20,11 +20,14 @@ const Home = () => {
     const fetchUserLevel = async () => {
       try {
         const response = await api.get("/auth/account");
-        const newLevel = response.data.level;
+        const newLevel = response.data.level || 1;  // 기본값 설정
         setUserLevel(newLevel);
         localStorage.setItem("userLevel", newLevel.toString());
       } catch (error) {
         console.error("Error fetching user level:", error);
+        // 에러 발생 시 기본값 사용
+        const savedLevel = localStorage.getItem("userLevel");
+        setUserLevel(savedLevel ? parseInt(savedLevel) : 1);
       }
     };
 
