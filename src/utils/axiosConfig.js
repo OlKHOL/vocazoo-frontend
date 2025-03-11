@@ -8,14 +8,9 @@ console.log("Current environment:", process.env.NODE_ENV);
 
 const instance = axios.create({
   baseURL,
-  withCredentials: true,
   headers: {
     "Content-Type": "application/json",
-    "Accept": "application/json",
   },
-  // CORS 관련 설정
-  xsrfCookieName: "XSRF-TOKEN",
-  xsrfHeaderName: "X-XSRF-TOKEN",
 });
 
 // 요청 인터셉터 추가
@@ -24,11 +19,6 @@ instance.interceptors.request.use(
     const token = localStorage.getItem("token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-    }
-    // CORS preflight 요청 최적화
-    if (config.method === "options") {
-      config.headers["Access-Control-Request-Method"] = "GET, POST, PUT, DELETE";
-      config.headers["Access-Control-Request-Headers"] = "Authorization, Content-Type";
     }
     return config;
   },
