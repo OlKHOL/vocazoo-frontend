@@ -12,7 +12,7 @@ const instance = axios.create({
     "Content-Type": "application/json",
   },
   withCredentials: true,
-  timeout: 10000,
+  timeout: 30000,  // 파일 업로드를 위해 타임아웃 증가
 });
 
 // 요청 인터셉터 추가
@@ -22,6 +22,12 @@ instance.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
+    // multipart/form-data인 경우 Content-Type 헤더 제거 (브라우저가 자동으로 설정)
+    if (config.data instanceof FormData) {
+      delete config.headers["Content-Type"];
+    }
+    
     return config;
   },
   (error) => {

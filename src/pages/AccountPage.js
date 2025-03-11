@@ -231,6 +231,29 @@ const AccountPage = () => {
                 </Typography>
               </Box>
 
+              {accountData.is_admin && (
+                <Button
+                  variant="contained"
+                  onClick={() => navigate("/admin/upload")}
+                  sx={{
+                    backgroundColor: "#9b87f5",
+                    color: "#FFFFFF",
+                    padding: "12px 24px",
+                    fontSize: "1.1rem",
+                    fontWeight: "bold",
+                    borderRadius: "12px",
+                    textTransform: "none",
+                    "&:hover": {
+                      backgroundColor: "#8b77e5",
+                    },
+                    width: "100%",
+                    mb: 2,
+                  }}
+                >
+                  단어 업로드
+                </Button>
+              )}
+
               {accountData.badges && accountData.badges.length > 0 && (
                 <Box
                   sx={{
