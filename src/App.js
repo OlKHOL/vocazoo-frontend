@@ -15,6 +15,7 @@ import WordSetPage from "./pages/WordSetPage";
 import LevelPage from "./pages/LevelPage";
 import Rankings from "./pages/RankingPage";
 import AccountPage from "./pages/AccountPage";
+import WordUploadPage from "./pages/WordUploadPage";
 import Navigationbar from "./components/Navigationbar";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import "./App.css";
@@ -96,6 +97,14 @@ const AppContent = () => {
           element={
             <PrivateRoute>
               <AccountPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/admin/upload"
+          element={
+            <PrivateRoute>
+              <WordUploadPage />
             </PrivateRoute>
           }
         />
