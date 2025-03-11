@@ -7,46 +7,55 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const isDevelopment = process.env.NODE_ENV === "development";
+  const [userData, setUserData] = useState(null);
 
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          setIsAuthenticated(false);
-          setIsAdmin(false);
-          setIsLoading(false);
-          return;
-        }
-
-        const response = await api.get("/auth/check");
-        setIsAuthenticated(true);
-        setIsAdmin(response.data.is_admin || false);
-      } catch (error) {
-        console.error("Auth check failed:", error);
-        setIsAuthenticated(false);
-        setIsAdmin(false);
-        localStorage.removeItem("token");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     checkAuth();
   }, []);
 
+  const checkAuth = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const response = await api.get("/auth/check");
+      setIsAuthenticated(true);
+      setIsAdmin(response.data.isAdmin || false);
+      setUserData(response.data);
+    } catch (error) {
+      console.error("Auth check failed:", error);
+      localStorage.removeItem("token");
+      setIsAuthenticated(false);
+      setIsAdmin(false);
+      setUserData(null);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const login = async (username, password) => {
     try {
+      console.log("AuthContext: Attempting login...");
       const response = await api.post("/auth/login", { username, password });
-      const { token, is_admin } = response.data;
-      localStorage.setItem("token", token);
-      setIsAuthenticated(true);
-      setIsAdmin(is_admin);
-      return true;
-    } catch (error) {
-      console.error("Login failed:", error);
+      console.log("AuthContext: Login response received:", response.data);
+
+      if (response.data.token) {
+        localStorage.setItem("token", response.data.token);
+        setIsAuthenticated(true);
+        setIsAdmin(response.data.isAdmin || false);
+        setUserData(response.data.user || null);
+        return true;
+      }
       return false;
+    } catch (error) {
+      console.error("AuthContext: Login failed:", error);
+      setIsAuthenticated(false);
+      setIsAdmin(false);
+      setUserData(null);
+      throw error;
     }
   };
 
@@ -54,21 +63,20 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("token");
     setIsAuthenticated(false);
     setIsAdmin(false);
+    setUserData(null);
   };
 
-  return (
-    <AuthContext.Provider
-      value={{
-        isAuthenticated,
-        isAdmin,
-        isLoading,
-        login,
-        logout,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
+  const value = {
+    isAuthenticated,
+    isAdmin,
+    isLoading,
+    userData,
+    login,
+    logout,
+    checkAuth,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {
@@ -78,3 +86,5 @@ export const useAuth = () => {
   }
   return context;
 };
+
+export default AuthContext;

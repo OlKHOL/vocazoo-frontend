@@ -4,6 +4,7 @@ import {
   Routes,
   Route,
   Navigate,
+  useLocation,
 } from "react-router-dom";
 import Home from "./pages/Home";
 import Login from "./components/Login";
@@ -32,65 +33,74 @@ const PrivateRoute = ({ children }) => {
   return isAuthenticated ? children : <Navigate to="/login" />;
 };
 
+const AppContent = () => {
+  const location = useLocation();
+  const showNavigation = !["/login", "/register"].includes(location.pathname);
+
+  return (
+    <div className="app">
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route
+          path="/"
+          element={
+            <PrivateRoute>
+              <Home />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/quiz"
+          element={
+            <PrivateRoute>
+              <Quiz />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/wrong-answers"
+          element={
+            <PrivateRoute>
+              <WrongAnswers />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/wordset"
+          element={
+            <PrivateRoute>
+              <WordSetPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/level"
+          element={
+            <PrivateRoute>
+              <LevelPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/rankings"
+          element={
+            <PrivateRoute>
+              <Rankings />
+            </PrivateRoute>
+          }
+        />
+      </Routes>
+      {showNavigation && <Navigationbar />}
+    </div>
+  );
+};
+
 const App = () => {
   return (
     <AuthProvider>
       <Router>
-        <div className="app">
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route
-              path="/"
-              element={
-                <PrivateRoute>
-                  <Home />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/quiz"
-              element={
-                <PrivateRoute>
-                  <Quiz />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/wrong-answers"
-              element={
-                <PrivateRoute>
-                  <WrongAnswers />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/wordset"
-              element={
-                <PrivateRoute>
-                  <WordSetPage />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/level"
-              element={
-                <PrivateRoute>
-                  <LevelPage />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/rankings"
-              element={
-                <PrivateRoute>
-                  <Rankings />
-                </PrivateRoute>
-              }
-            />
-          </Routes>
-          <Navigationbar />
-        </div>
+        <AppContent />
       </Router>
     </AuthProvider>
   );

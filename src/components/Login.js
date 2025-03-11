@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Container,
@@ -9,7 +9,7 @@ import {
   Box,
   Link,
 } from "@mui/material";
-import api from "../utils/axiosConfig";
+import { useAuth } from "../contexts/AuthContext";
 
 function Login() {
   const [username, setUsername] = useState("");
@@ -17,15 +17,33 @@ function Login() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const location = useLocation();
+  const { login } = useAuth();
   const successMessage = location.state?.message;
+
+  useEffect(() => {
+    // 이미 로그인되어 있다면 홈으로 리다이렉트
+    const token = localStorage.getItem("token");
+    if (token) {
+      navigate("/");
+    }
+  }, [navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
+    
     try {
-      const response = await api.post("/auth/login", { username, password });
-      localStorage.setItem("token", response.data.token);
-      navigate("/");
+      console.log("Attempting login...");
+      const success = await login(username, password);
+      console.log("Login attempt result:", success);
+      
+      if (success) {
+        navigate("/");
+      } else {
+        setError("로그인에 실패했습니다.");
+      }
     } catch (error) {
+      console.error("Login error:", error);
       setError(
         error.response?.data?.message || "로그인 중 오류가 발생했습니다."
       );

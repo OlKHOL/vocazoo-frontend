@@ -7,28 +7,25 @@ import {
   CircularProgress,
   Container,
   Avatar,
+  Paper,
 } from "@mui/material";
-import Navigationbar from "../components/Navigationbar";
-import api from "../utils/axiosConfig";
+import { useAuth } from "../contexts/AuthContext";
 
 const AccountPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [userData, setUserData] = useState(null);
   const navigate = useNavigate();
   const mounted = useRef(false);
+  const { userData, logout, checkAuth } = useAuth();
 
   useEffect(() => {
     mounted.current = true;
 
     const fetchData = async () => {
       try {
-        console.log("Fetching account data...");
-        const response = await api.get("/auth/account");
-        
+        console.log("Checking authentication and refreshing user data...");
+        await checkAuth();
         if (mounted.current) {
-          console.log("Account data received:", response.data);
-          setUserData(response.data);
           setError(null);
         }
       } catch (err) {
@@ -58,7 +55,12 @@ const AccountPage = () => {
     return () => {
       mounted.current = false;
     };
-  }, [navigate]);
+  }, [navigate, checkAuth]);
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
 
   if (loading) {
     return (
@@ -121,62 +123,99 @@ const AccountPage = () => {
   }
 
   return (
-    <Box sx={{ minHeight: "100vh", background: "#1E2A3A" }}>
+    <Box sx={{ minHeight: "100vh", background: "#1E2A3A", py: 4 }}>
       <Container maxWidth="sm">
-        <Box
+        <Paper
           sx={{
-            pt: 4,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
+            backgroundColor: "#17202C",
+            borderRadius: "20px",
+            p: 4,
+            mb: 4,
           }}
         >
-          <Avatar
+          <Box
             sx={{
-              width: 80,
-              height: 80,
-              backgroundColor: "#9b87f5",
-              fontSize: "2rem",
-              mb: 2,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
             }}
           >
-            {userData.username ? userData.username.charAt(0) : "?"}
-          </Avatar>
-          <Typography
-            variant="h4"
-            sx={{
-              color: "#FFFFFF",
-              fontWeight: "bold",
-              mb: 2,
-            }}
-          >
-            {userData.username || "사용자"}
-          </Typography>
-          <Typography sx={{ color: "#FFFFFF", mb: 1 }}>
-            레벨: {userData.level || 0}
-          </Typography>
-          <Typography sx={{ color: "#FFFFFF", mb: 1 }}>
-            경험치: {userData.exp || 0}
-          </Typography>
-          <Typography sx={{ color: "#FFFFFF", mb: 3 }}>
-            점수: {userData.current_score || 0}
-          </Typography>
-          <Button
-            variant="contained"
-            onClick={() => {
-              localStorage.removeItem("token");
-              navigate("/login");
-            }}
-            sx={{
-              backgroundColor: "#FF4081",
-              "&:hover": { backgroundColor: "#E91E63" },
-            }}
-          >
-            로그아웃
-          </Button>
-        </Box>
+            <Avatar
+              sx={{
+                width: 100,
+                height: 100,
+                backgroundColor: "#9b87f5",
+                fontSize: "2.5rem",
+                mb: 3,
+              }}
+            >
+              {userData.username ? userData.username.charAt(0).toUpperCase() : "?"}
+            </Avatar>
+            
+            <Typography
+              variant="h4"
+              sx={{
+                color: "#FFFFFF",
+                fontWeight: "bold",
+                mb: 3,
+                textAlign: "center",
+              }}
+            >
+              {userData.username || "사용자"}
+            </Typography>
+
+            <Box sx={{ width: "100%", mb: 4 }}>
+              <Typography
+                sx={{
+                  color: "#FFFFFF",
+                  fontSize: "1.2rem",
+                  mb: 2,
+                  textAlign: "center",
+                }}
+              >
+                레벨 {userData.level || 1}
+              </Typography>
+              
+              <Box
+                sx={{
+                  backgroundColor: "rgba(155, 135, 245, 0.1)",
+                  borderRadius: "10px",
+                  p: 3,
+                  mb: 2,
+                }}
+              >
+                <Typography sx={{ color: "#FFFFFF", mb: 1 }}>
+                  경험치: {userData.exp || 0}
+                </Typography>
+                <Typography sx={{ color: "#FFFFFF", mb: 1 }}>
+                  현재 점수: {userData.current_score || 0}
+                </Typography>
+              </Box>
+            </Box>
+
+            <Button
+              variant="contained"
+              onClick={handleLogout}
+              sx={{
+                backgroundColor: "#FF4081",
+                color: "#FFFFFF",
+                padding: "12px 24px",
+                fontSize: "1.1rem",
+                fontWeight: "bold",
+                borderRadius: "12px",
+                textTransform: "none",
+                "&:hover": {
+                  backgroundColor: "#E91E63",
+                },
+                width: "100%",
+                maxWidth: "200px",
+              }}
+            >
+              로그아웃
+            </Button>
+          </Box>
+        </Paper>
       </Container>
-      <Navigationbar />
     </Box>
   );
 };
