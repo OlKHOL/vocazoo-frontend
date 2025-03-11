@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Box,
@@ -8,6 +8,7 @@ import {
   Container,
   Avatar,
   Paper,
+  LinearProgress,
 } from "@mui/material";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -15,47 +16,45 @@ const AccountPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
-  const mounted = useRef(false);
-  const { userData, logout, checkAuth } = useAuth();
+  const { userData, logout, checkAuth, isAuthenticated } = useAuth();
+  const [levelProgress, setLevelProgress] = useState(0);
 
   useEffect(() => {
-    mounted.current = true;
-
-    const fetchData = async () => {
+    const loadUserData = async () => {
       try {
+        if (!localStorage.getItem("token")) {
+          console.log("No token found, redirecting to login");
+          navigate("/login");
+          return;
+        }
+
         console.log("Checking authentication and refreshing user data...");
         await checkAuth();
-        if (mounted.current) {
-          setError(null);
-        }
+        setError(null);
+
+        // Calculate level progress
+        const totalExpForLevel = Math.pow(userData?.level * 2, 2) * 100;
+        const progress = (userData?.exp / totalExpForLevel) * 100;
+        setLevelProgress(progress);
       } catch (err) {
-        console.error("Failed to fetch account data:", err.message);
-        if (mounted.current) {
-          setError(err.response?.data?.message || err.message || "서버에서 응답이 없습니다.");
-          if (err.response?.status === 401) {
-            navigate("/login");
-          }
+        console.error("Failed to fetch account data:", err);
+        setError(err.response?.data?.message || err.message || "서버에서 응답이 없습니다.");
+        if (err.response?.status === 401) {
+          navigate("/login");
         }
       } finally {
-        if (mounted.current) {
-          setLoading(false);
-        }
+        setLoading(false);
       }
     };
 
-    const token = localStorage.getItem("token");
-    if (!token) {
-      console.log("No token found, redirecting to login");
+    loadUserData();
+  }, [navigate, checkAuth, userData?.level, userData?.exp]);
+
+  useEffect(() => {
+    if (!isAuthenticated && !loading) {
       navigate("/login");
-      return;
     }
-
-    fetchData();
-
-    return () => {
-      mounted.current = false;
-    };
-  }, [navigate, checkAuth]);
+  }, [isAuthenticated, loading, navigate]);
 
   const handleLogout = () => {
     logout();
@@ -117,7 +116,7 @@ const AccountPage = () => {
           color: "#FFFFFF",
         }}
       >
-        <Typography>데이터를 불러올 수 없습니다.</Typography>
+        <Typography>사용자 데이터를 불러올 수 없습니다.</Typography>
       </Box>
     );
   }
@@ -176,6 +175,32 @@ const AccountPage = () => {
                 레벨 {userData.level || 1}
               </Typography>
               
+              <Box sx={{ width: "100%", mb: 2 }}>
+                <LinearProgress
+                  variant="determinate"
+                  value={levelProgress}
+                  sx={{
+                    height: 10,
+                    borderRadius: 5,
+                    backgroundColor: "rgba(155, 135, 245, 0.2)",
+                    "& .MuiLinearProgress-bar": {
+                      backgroundColor: "#9b87f5",
+                      borderRadius: 5,
+                    },
+                  }}
+                />
+                <Typography
+                  sx={{
+                    color: "#FFFFFF",
+                    fontSize: "0.8rem",
+                    mt: 1,
+                    textAlign: "center",
+                  }}
+                >
+                  {userData.exp || 0} EXP
+                </Typography>
+              </Box>
+              
               <Box
                 sx={{
                   backgroundColor: "rgba(155, 135, 245, 0.1)",
@@ -185,12 +210,53 @@ const AccountPage = () => {
                 }}
               >
                 <Typography sx={{ color: "#FFFFFF", mb: 1 }}>
-                  경험치: {userData.exp || 0}
+                  현재 점수: {userData.current_score || 0}점
                 </Typography>
                 <Typography sx={{ color: "#FFFFFF", mb: 1 }}>
-                  현재 점수: {userData.current_score || 0}
+                  완료한 테스트: {userData.completed_tests || 0}회
                 </Typography>
               </Box>
+
+              {userData.badges && userData.badges.length > 0 && (
+                <Box
+                  sx={{
+                    backgroundColor: "rgba(155, 135, 245, 0.1)",
+                    borderRadius: "10px",
+                    p: 3,
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      color: "#FFFFFF",
+                      mb: 2,
+                      fontWeight: "bold",
+                    }}
+                  >
+                    획득한 뱃지
+                  </Typography>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: 1,
+                    }}
+                  >
+                    {userData.badges.map((badge, index) => (
+                      <Box
+                        key={index}
+                        sx={{
+                          backgroundColor: "#9b87f5",
+                          borderRadius: "5px",
+                          p: 1,
+                          color: "#FFFFFF",
+                        }}
+                      >
+                        {badge}
+                      </Box>
+                    ))}
+                  </Box>
+                </Box>
+              )}
             </Box>
 
             <Button
@@ -220,4 +286,4 @@ const AccountPage = () => {
   );
 };
 
-export default AccountPage;
+export default AccountPage; 
