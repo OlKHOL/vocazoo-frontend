@@ -77,16 +77,34 @@ const WordUploadPage = () => {
 
       if (response.status === 422) {
         console.error('=== 422 에러 상세 정보 ===');
-        console.error('에러 메시지:', response.data.error);
-        console.error('상세 에러:', response.data.details);
-        console.error('중복 단어:', response.data.duplicates);
+        console.error('전체 응답:', response);
+        console.error('응답 데이터:', JSON.stringify(response.data, null, 2));
+        console.error('에러 타입:', typeof response.data);
+        console.error('에러 메시지:', response.data?.error);
+        console.error('상세 에러:', response.data?.details);
+        console.error('중복 단어:', response.data?.duplicates);
         
-        let errorMessage = `업로드 오류: ${response.data.error}`;
-        if (response.data.details) {
-          errorMessage += `\n\n상세 오류:\n${response.data.details.join('\n')}`;
-        }
-        if (response.data.duplicates) {
-          errorMessage += `\n\n중복된 단어:\n${response.data.duplicates.join(', ')}`;
+        let errorMessage = '업로드 오류가 발생했습니다.';
+        if (response.data) {
+          if (typeof response.data === 'string') {
+            errorMessage = response.data;
+          } else {
+            if (response.data.error) {
+              errorMessage = response.data.error;
+            }
+            if (response.data.details) {
+              errorMessage += '\n\n상세 오류:\n' + 
+                (Array.isArray(response.data.details) 
+                  ? response.data.details.join('\n')
+                  : response.data.details);
+            }
+            if (response.data.duplicates) {
+              errorMessage += '\n\n중복된 단어:\n' + 
+                (Array.isArray(response.data.duplicates)
+                  ? response.data.duplicates.join(', ')
+                  : response.data.duplicates);
+            }
+          }
         }
         setError(errorMessage);
         return;
