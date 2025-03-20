@@ -44,61 +44,80 @@ const WordUploadPage = () => {
     formData.append('file', file);
 
     try {
-      console.log('[Upload] Starting file upload...');
-      console.log('[Upload] File name:', file.name);
-      console.log('[Upload] File size:', file.size, 'bytes');
-      console.log('[Upload] File type:', file.type);
+      // 파일 정보 상세 로깅
+      console.log('=== 파일 업로드 시작 ===');
+      console.log('파일 정보:', {
+        이름: file.name,
+        크기: `${file.size} bytes`,
+        타입: file.type,
+        최종수정: new Date(file.lastModified).toLocaleString()
+      });
+
+      // 파일 내용 미리보기
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const content = e.target.result;
+        console.log('파일 내용 미리보기 (처음 500자):', content.substring(0, 500));
+      };
+      reader.readAsText(file);
 
       const response = await api.post('/admin/upload_words', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
         validateStatus: function (status) {
-          return status < 500; // 500 미만의 상태 코드는 에러로 처리하지 않음
+          return status < 500;
         }
       });
 
-      console.log('[Upload] Response:', response);
+      console.log('=== 서버 응답 상세 ===');
+      console.log('상태 코드:', response.status);
+      console.log('응답 헤더:', response.headers);
+      console.log('응답 데이터:', response.data);
 
       if (response.status === 422) {
-        // 422 에러의 경우 상세 에러 메시지 표시
-        if (response.data.details && Array.isArray(response.data.details)) {
-          setError(
-            <div>
-              <p>파일 처리 중 다음과 같은 문제가 발생했습니다:</p>
-              <ul style={{ marginLeft: '20px', marginTop: '10px' }}>
-                {response.data.details.map((error, index) => (
-                  <li key={index} style={{ marginBottom: '5px' }}>{error}</li>
-                ))}
-              </ul>
-              {response.data.duplicates && response.data.duplicates.length > 0 && (
-                <div style={{ marginTop: '10px' }}>
-                  <p>중복된 단어 ({response.data.duplicates.length}개):</p>
-                  <p style={{ fontSize: '0.9em', color: '#666' }}>
-                    {response.data.duplicates.join(', ')}
-                  </p>
-                </div>
-              )}
-            </div>
-          );
-        } else {
-          setError(response.data.error || '파일 처리 중 오류가 발생했습니다.');
+        console.error('=== 422 에러 상세 정보 ===');
+        console.error('에러 메시지:', response.data.error);
+        console.error('상세 에러:', response.data.details);
+        console.error('중복 단어:', response.data.duplicates);
+        
+        let errorMessage = `업로드 오류: ${response.data.error}`;
+        if (response.data.details) {
+          errorMessage += `\n\n상세 오류:\n${response.data.details.join('\n')}`;
         }
-      } else if (response.status === 200) {
-        setResult({
-          success: true,
-          message: response.data.message,
-          duplicates: response.data.duplicates,
-        });
-      } else {
-        throw new Error('업로드 실패');
+        if (response.data.duplicates) {
+          errorMessage += `\n\n중복된 단어:\n${response.data.duplicates.join(', ')}`;
+        }
+        setError(errorMessage);
+        return;
       }
-    } catch (err) {
-      console.error('[Upload] Error:', err);
-      console.error('[Upload] Error response:', err.response);
-      setError(err.response?.data?.error || '업로드 중 오류가 발생했습니다.');
+
+      if (response.status !== 200) {
+        console.error('=== 기타 에러 상세 정보 ===');
+        console.error('상태 코드:', response.status);
+        console.error('에러 데이터:', response.data);
+        setError(`업로드 실패: ${response.data.error || '알 수 없는 오류가 발생했습니다'}`);
+        return;
+      }
+
+      setResult({
+        success: true,
+        message: response.data.message,
+        duplicates: response.data.duplicates,
+      });
+    } catch (error) {
+      console.error('=== 예외 발생 상세 정보 ===');
+      console.error('에러 객체:', error);
+      console.error('에러 메시지:', error.message);
+      if (error.response) {
+        console.error('응답 상태:', error.response.status);
+        console.error('응답 데이터:', error.response.data);
+        console.error('응답 헤더:', error.response.headers);
+      }
+      setError(`업로드 중 오류 발생: ${error.message}`);
     } finally {
       setLoading(false);
+      console.log('=== 파일 업로드 종료 ===');
     }
   };
 

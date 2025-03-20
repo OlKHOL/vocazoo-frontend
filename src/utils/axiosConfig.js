@@ -39,11 +39,32 @@ instance.interceptors.request.use(
 // 응답 인터셉터 추가
 instance.interceptors.response.use(
   (response) => {
-    console.log("[API Response]", response.config.url, response.data);
+    console.log('=== API 응답 상세 정보 ===');
+    console.log('URL:', response.config.url);
+    console.log('Method:', response.config.method);
+    console.log('Status:', response.status);
+    console.log('Status Text:', response.statusText);
+    console.log('Headers:', response.headers);
+    console.log('Response Data:', response.data);
     return response;
   },
   (error) => {
-    console.error("[Response Error]", error.config?.url, error.message);
+    console.error('=== API 에러 상세 정보 ===');
+    if (error.response) {
+      // 서버가 응답을 반환한 경우
+      console.error('Status:', error.response.status);
+      console.error('Status Text:', error.response.statusText);
+      console.error('Headers:', error.response.headers);
+      console.error('Error Data:', error.response.data);
+    } else if (error.request) {
+      // 요청은 보냈지만 응답을 받지 못한 경우
+      console.error('Request made but no response received');
+      console.error('Request:', error.request);
+    } else {
+      // 요청 설정 중에 문제가 발생한 경우
+      console.error('Error Message:', error.message);
+    }
+    console.error('Error Config:', error.config);
     
     if (error.response?.status === 401) {
       console.log("Unauthorized access, removing token");
