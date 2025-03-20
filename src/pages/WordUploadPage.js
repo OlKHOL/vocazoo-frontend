@@ -18,7 +18,18 @@ const WordUploadPage = () => {
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, refreshToken } = useAuth();
+
+  const validateToken = async () => {
+    try {
+      // 토큰 유효성 검사
+      const response = await api.get('/auth/check');
+      return response.status === 200;
+    } catch (error) {
+      console.error('Token validation failed:', error);
+      return false;
+    }
+  };
 
   const handleFileChange = (event) => {
     const selectedFile = event.target.files[0];
@@ -40,10 +51,19 @@ const WordUploadPage = () => {
     setError(null);
     setResult(null);
 
-    const formData = new FormData();
-    formData.append('file', file);
-
     try {
+      // 토큰 유효성 검사
+      const isTokenValid = await validateToken();
+      if (!isTokenValid) {
+        // 토큰이 유효하지 않으면 갱신 시도
+        const refreshed = await refreshToken();
+        if (!refreshed) {
+          setError('인증이 만료되었습니다. 다시 로그인해주세요.');
+          navigate('/login');
+          return;
+        }
+      }
+
       // 파일 정보 상세 로깅
       console.log('=== 파일 업로드 시작 ===');
       console.log('파일 정보:', {
@@ -60,6 +80,9 @@ const WordUploadPage = () => {
         console.log('파일 내용 미리보기 (처음 500자):', content.substring(0, 500));
       };
       reader.readAsText(file);
+
+      const formData = new FormData();
+      formData.append('file', file);
 
       const response = await api.post('/admin/upload_words', formData, {
         headers: {
@@ -88,6 +111,11 @@ const WordUploadPage = () => {
         if (response.data) {
           if (typeof response.data === 'string') {
             errorMessage = response.data;
+          } else if (response.data.msg && response.data.msg.includes('Missing claim')) {
+            // 토큰 관련 오류 처리
+            setError('인증이 만료되었습니다. 다시 로그인해주세요.');
+            navigate('/login');
+            return;
           } else {
             if (response.data.error) {
               errorMessage = response.data.error;
@@ -131,6 +159,13 @@ const WordUploadPage = () => {
         console.error('응답 상태:', error.response.status);
         console.error('응답 데이터:', error.response.data);
         console.error('응답 헤더:', error.response.headers);
+        
+        // 401 Unauthorized 에러 처리
+        if (error.response.status === 401) {
+          setError('인증이 만료되었습니다. 다시 로그인해주세요.');
+          navigate('/login');
+          return;
+        }
       }
       setError(`업로드 중 오류 발생: ${error.message}`);
     } finally {
