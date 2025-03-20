@@ -44,19 +44,51 @@ const WordUploadPage = () => {
     formData.append('file', file);
 
     try {
+      console.log('[Upload] Starting file upload...');
+      console.log('[Upload] File name:', file.name);
+      console.log('[Upload] File size:', file.size, 'bytes');
+      console.log('[Upload] File type:', file.type);
+
       const response = await api.post('/admin/upload_words', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
+        validateStatus: function (status) {
+          return status < 500; // 500 미만의 상태 코드는 에러로 처리하지 않음
+        }
       });
 
-      setResult({
-        success: true,
-        message: response.data.message,
-        duplicates: response.data.duplicates,
-      });
+      console.log('[Upload] Response:', response);
+
+      if (response.status === 422) {
+        // 422 에러의 경우 상세 에러 메시지 표시
+        const errorDetails = response.data.details;
+        if (errorDetails && Array.isArray(errorDetails)) {
+          setError(
+            <div>
+              <p>파일 처리 중 다음과 같은 문제가 발생했습니다:</p>
+              <ul>
+                {errorDetails.map((error, index) => (
+                  <li key={index}>{error}</li>
+                ))}
+              </ul>
+            </div>
+          );
+        } else {
+          setError(response.data.error || '파일 처리 중 오류가 발생했습니다.');
+        }
+      } else if (response.status === 200) {
+        setResult({
+          success: true,
+          message: response.data.message,
+          duplicates: response.data.duplicates,
+        });
+      } else {
+        throw new Error('업로드 실패');
+      }
     } catch (err) {
-      console.error('Upload error:', err);
+      console.error('[Upload] Error:', err);
+      console.error('[Upload] Error response:', err.response);
       setError(err.response?.data?.error || '업로드 중 오류가 발생했습니다.');
     } finally {
       setLoading(false);
