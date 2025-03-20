@@ -62,16 +62,23 @@ const WordUploadPage = () => {
 
       if (response.status === 422) {
         // 422 에러의 경우 상세 에러 메시지 표시
-        const errorDetails = response.data.details;
-        if (errorDetails && Array.isArray(errorDetails)) {
+        if (response.data.details && Array.isArray(response.data.details)) {
           setError(
             <div>
               <p>파일 처리 중 다음과 같은 문제가 발생했습니다:</p>
-              <ul>
-                {errorDetails.map((error, index) => (
-                  <li key={index}>{error}</li>
+              <ul style={{ marginLeft: '20px', marginTop: '10px' }}>
+                {response.data.details.map((error, index) => (
+                  <li key={index} style={{ marginBottom: '5px' }}>{error}</li>
                 ))}
               </ul>
+              {response.data.duplicates && response.data.duplicates.length > 0 && (
+                <div style={{ marginTop: '10px' }}>
+                  <p>중복된 단어 ({response.data.duplicates.length}개):</p>
+                  <p style={{ fontSize: '0.9em', color: '#666' }}>
+                    {response.data.duplicates.join(', ')}
+                  </p>
+                </div>
+              )}
             </div>
           );
         } else {
